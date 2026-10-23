@@ -1,0 +1,112 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>JH 업무판</title><meta name="theme-color" content="#b08a3e"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="JH 업무판">
+<style>
+:root{--bg:#f4f1ea;--card:#fff;--ink:#1d2a44;--mute:#7a8191;--line:#e5e0d5;--gold:#b08a3e;--red:#c0392b;--green:#2e8b57;--me:#243a68;--soft:#faf7f0}
+@media (prefers-color-scheme:dark){:root{--bg:#151a24;--card:#1f2633;--ink:#e8e6e1;--mute:#8d95a5;--line:#2e3646;--gold:#d4ad5c;--green:#5cc28a;--me:#34508a;--soft:#262e3d}}
+*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,"Apple SD Gothic Neo",sans-serif;padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+header{padding:12px 14px 4px;position:sticky;top:0;background:var(--bg);z-index:5;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}h1{margin:0;font-size:18px}.muted{color:var(--mute);font-size:13px}
+.stale{margin:0 14px 6px;background:#fff3cd;color:#7a5a00;border-radius:8px;padding:5px 10px;font-size:12px}.stale.ok{background:#e6f4ea;color:#1e6b3a}
+html,body{overflow-x:hidden;width:100%}main{padding:0 12px}.card{min-width:0;overflow:hidden}.snap{overflow-x:auto}.snap *{max-width:100%}nav{width:100%}.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0;overflow-x:auto}
+.card h2{margin:0 0 8px;font-size:15px;display:flex;gap:8px;align-items:center}.badge{background:var(--gold);color:#fff;border-radius:10px;padding:0 8px;font-size:12px}.badge.zero{background:var(--line);color:var(--mute)}
+.snap button,.snap .x,.snap form,.snap .sm,.snap .cardctl,.snap .acts,.snap input,.snap .hov{display:none!important}.snap .smodal{display:none}
+.snap a{color:var(--ink)}ul{padding-left:18px}.list{list-style:none;padding:0}.list li{padding:5px 0;border-bottom:1px solid var(--line)}
+.bcols{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}.bcol{background:var(--soft);border-radius:10px;padding:8px 10px;border-top:3px solid var(--line)}.bcol.today{border-top-color:var(--gold)}.bcol.missed{border-top-color:var(--red)}.bcol.week{border-top-color:var(--me)}.bct{font-weight:600;font-size:14px}
+.bhead{font-weight:600}.fchip{display:inline-block;border:1px solid var(--line);border-radius:14px;padding:1px 8px;font-size:12px;margin:2px;background:var(--soft)}.fchip.red{color:var(--red);border-color:var(--red)}.fchip.gold{color:var(--gold);border-color:var(--gold)}
+.bplan{color:var(--gold);font-size:13px;margin-top:6px}.frow{margin-top:6px}.flab{font-size:12px;font-weight:600}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.row b{flex:1}
+.proj{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--soft);margin:8px 0}.proj.stalled{border-color:var(--red)}
+.bar{height:6px;background:var(--line);border-radius:3px;margin:6px 0}.bar i{display:block;height:100%;background:var(--gold);border-radius:3px}
+.steps{list-style:none;padding:0;margin:6px 0}.steps li{display:flex;gap:8px;padding:4px 0;font-size:13px;align-items:baseline;border-bottom:1px dashed var(--line)}.steps li.cur{color:var(--gold);font-weight:600;font-size:14px}.steps li.ok{color:var(--mute)}
+.chk{min-width:20px;height:20px;line-height:20px;text-align:center;border-radius:10px;background:var(--line);font-size:11px;color:var(--mute)}.cur .chk{background:var(--gold);color:#fff}.ok .chk{background:var(--green);color:#fff}
+.tag{font-size:11px;color:var(--gold);border:1px solid var(--gold);border-radius:6px;padding:0 4px;white-space:nowrap}.tag.off{opacity:.35}.pill{font-size:11px;border-radius:8px;padding:0 7px;color:#fff;background:var(--gold)}.pill.red{background:var(--red)}.pill.gray{background:var(--mute)}.pill.green{background:var(--green)}
+.todo{list-style:none;padding:0}.todo li{display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}.todo li label{flex:1;display:flex;gap:8px;align-items:center}.todo .done label{color:var(--mute);text-decoration:line-through}
+.todo input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold)}.x{border:0;background:none;color:var(--mute);font-size:18px;padding:0 6px}
+.oc{width:100%;border-collapse:collapse;font-size:13px}.oc td,.oc th{padding:4px;border-bottom:1px solid var(--line);text-align:left}.att{font-size:11px;border-radius:6px;padding:0 5px;color:#fff;background:var(--green)}.att.none{background:var(--line);color:var(--mute)}.att.absent{background:var(--red)}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.tile{background:var(--soft);border-radius:8px;padding:8px;text-align:center}.tile b{display:block;font-size:20px;color:var(--gold)}.tile span{font-size:11px;color:var(--mute)}
+.chat{display:flex;flex-direction:column;gap:8px}.msg{max-width:88%;padding:8px 12px;border-radius:12px;white-space:pre-wrap;font-size:14px;overflow-wrap:anywhere}.msg.user{align-self:flex-end;background:var(--me);color:#fff}.msg.user .muted{color:#c9d2e6}.msg.assistant{align-self:flex-start;background:var(--soft)}.msg.err{border:1px solid var(--red)}.live{color:var(--green);font-size:13px}
+form.inline{display:flex;gap:6px;margin-top:8px}form.inline input,textarea{flex:1;padding:10px;border:1px solid var(--line);border-radius:10px;font:inherit;background:var(--bg);color:var(--ink);width:100%}
+button.sm{background:var(--gold);color:#fff;border:0;border-radius:8px;padding:6px 12px;font:inherit;font-size:13px}button.ghost{background:none;color:var(--mute);border:1px solid var(--line)}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:10}nav button{flex:1;border:0;background:none;padding:10px 0 8px;font:inherit;font-size:12px;color:var(--mute)}nav button.on{color:var(--gold);font-weight:600}nav button span{display:block;font-size:20px}
+.gate{display:flex;align-items:center;justify-content:center;min-height:80vh}.gate form{background:var(--card);padding:24px;border-radius:14px;width:min(360px,92vw)}.gate input{width:100%;font-size:16px;padding:12px;border:1px solid var(--line);border-radius:10px;margin:6px 0;font:inherit}
+.gate button{width:100%;margin-top:10px;background:var(--gold);color:#fff;border:0;border-radius:8px;padding:12px;font-size:16px}
+.toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:var(--ink);color:var(--card);padding:8px 14px;border-radius:10px;font-size:13px;display:none;z-index:20}
+.tab{display:none}.tab.on{display:block}.time{color:var(--gold);font-weight:600;font-size:13px;margin-right:4px}.chip{display:none}details summary{cursor:pointer}
+</style>
+<header><h1>JH 업무판</h1><span id="head" class="muted"></span><span id="conn" class="muted" style="margin-left:auto"></span></header>
+<div id="stale" class="stale" hidden></div>
+<main>
+<div class="gate" id="gate"><form onsubmit="login(event)"><h3 style="margin:0 0 8px">JH 업무판</h3><p class="muted">학습 리포트 앱 원장 계정으로 로그인</p>
+<input id="em" type="email" placeholder="이메일" autocomplete="username"><input id="pw" type="password" placeholder="비밀번호" autocomplete="current-password"><button>로그인</button><p class="muted" id="gmsg"></p></form></div>
+<div id="app" hidden>
+ <section class="tab on" id="t-today">
+  <div class="card snap"><h2>브리핑</h2><div id="brief"></div></div>
+  <div class="card"><h2>오늘 할 일 <span class="badge" id="todobadge">0</span></h2><ul class="todo" id="todo"></ul>
+   <form class="inline" onsubmit="addTodo(event)"><input id="ti" placeholder="할 일 추가 (!!!높음 @내일 돼요)"><button class="sm">추가</button></form>
+   <div id="dday"></div></div>
+ </section>
+ <section class="tab" id="t-proj"><div class="card"><h2>진행 현황표 <span class="badge" id="projbadge">0</span></h2><div id="projects"></div></div></section>
+ <section class="tab" id="t-chat"><div class="card"><h2>비서 <span id="pend" class="live" hidden>● 처리 중</span></h2><div class="chat snap" id="chat"></div>
+  <form class="inline" onsubmit="sendChat(event)"><input id="ci" placeholder="비서에게 말하기 (맥이 켜져 있으면 바로 답해요)"><button class="sm">보내기</button></form>
+  <div class="row" style="margin-top:8px"><button class="sm ghost" onclick="inbox('check','')">다시 브리핑</button></div></div></section>
+ <section class="tab" id="t-more">
+  <div class="card"><h2>메모</h2><textarea id="memo" rows="8" oninput="memoSave()" placeholder="자유 메모 (맥과 실시간 공유)"></textarea><div class="muted" id="memost"></div></div>
+  <div class="card snap"><h2>코워크 협업함</h2><div id="collab"></div></div>
+  <div class="card snap"><h2>회사 메일</h2><div id="mail"></div></div>
+  <div class="card snap"><h2>온라인 클래스</h2><div id="oc"></div></div>
+  <div class="card snap"><h2>이번 주 성과</h2><div id="stats"></div></div>
+  <div class="card snap"><h2>세션 기록</h2><div id="act"></div><div id="sessions"></div></div>
+  <div class="card"><h2>연락처</h2><div id="contacts"></div></div>
+  <div class="card"><button class="sm ghost" onclick="logout()">로그아웃</button></div>
+ </section>
+</div>
+</main>
+<nav id="nav"><button class="on" data-t="today" onclick="tab('today')"><span>☀</span>오늘</button><button data-t="proj" onclick="tab('proj')"><span>▦</span>현황표</button><button data-t="chat" onclick="tab('chat')"><span>💬</span>비서</button><button data-t="more" onclick="tab('more')"><span>⋯</span>더보기</button></nav>
+<div class="toast" id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script>
+const $=id=>document.getElementById(id);const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const db=supabase.createClient(JH_CFG.url,JH_CFG.key);let UID=null,S={};const today=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2500)}
+function tab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.id==='t-'+t));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));localStorage.setItem('tab',t);window.scrollTo(0,0)}
+async function login(e){e.preventDefault();$('gmsg').textContent='…';const {error}=await db.auth.signInWithPassword({email:$('em').value.trim(),password:$('pw').value});$('gmsg').textContent=error?'로그인 실패: '+error.message:''}
+async function logout(){await db.auth.signOut();location.reload()}
+if(location.hash==='#test'){fetch('_test.json').then(r=>r.json()).then(rows=>{for(const r of rows)S[r.key]=r;UID='test';$('gate').hidden=true;$('app').hidden=false;render();tab(new URLSearchParams(location.search).get('tab')||'today')})}else db.auth.onAuthStateChange((ev,sess)=>{if(sess){UID=sess.user.id;$('gate').hidden=true;$('app').hidden=false;boot()}else{$('gate').hidden=false;$('app').hidden=true}});
+async function boot(){const {data,error}=await db.from('dash_state').select('key,data,updated_at,src');if(error){toast('불러오기 실패 '+error.message);return}
+ for(const r of data)S[r.key]=r;render();tab(localStorage.getItem('tab')||'today');
+ db.channel('dash').on('postgres_changes',{event:'*',schema:'public',table:'dash_state',filter:'user_id=eq.'+UID},p=>{const r=p.new;if(!r||!r.key)return;if(S[r.key]&&r.src==='phone'&&S[r.key].updated_at>=r.updated_at)return;S[r.key]=r;render(r.key)}).subscribe(st=>{$('conn').textContent=st==='SUBSCRIBED'?'● 실시간':'연결 중…'});
+ setInterval(staleness,30000)}
+async function save(key,data){const row={user_id:UID,key,data,src:'phone',updated_at:new Date().toISOString()};S[key]={...row};render(key);const {error}=await db.from('dash_state').upsert(row);if(error)toast('저장 실패 '+error.message)}
+async function inbox(kind,payload){const {error}=await db.from('dash_inbox').insert({user_id:UID,kind,payload});toast(error?'보내기 실패':'보냈어요 — 맥이 켜져 있으면 곧 반영돼요')}
+function staleness(){const s=S.snapshot?.data;const st=$('stale');if(!s){st.hidden=false;st.className='stale';st.textContent='맥에서 아직 올린 내용이 없어요';return}
+ const age=(Date.now()-new Date(s.at))/60000;st.hidden=false;st.className='stale'+(age<3?' ok':'');st.textContent=age<3?`맥 연결됨 · ${Math.round(age)}분 전 갱신`:age<90?`맥 마지막 갱신 ${Math.round(age)}분 전`:`맥 마지막 갱신 ${s.at.slice(5,16).replace('T',' ')} — 맥이 꺼져 있거나 잠든 듯. 할 일·현황표·메모는 그래도 저장돼요.`}
+// ---- 렌더 ----
+function render(k){const s=S.snapshot?.data||{};if(!k||k==='snapshot'){$('head').innerHTML=s.head||'';for(const id of ['brief','mail','collab','oc','stats','act','sessions'])$(id).innerHTML=s[id]||'<p class=muted>맥에서 올린 내용 없음</p>';$('chat').innerHTML=s.chat||'';$('pend').hidden=!s.pending;staleness()}
+ if(!k||k==='todo')renderTodo();if(!k||k==='projects')renderProj();if(!k||k==='todo'||k==='projects')renderDday();
+ if((!k||k==='memo')&&document.activeElement!==$('memo'))$('memo').value=S.memo?.data?.text||'';if(!k||k==='contacts')renderContacts()}
+function todoDone(t){const d=today();if(t.daily===true)return t.done===d;if(t.daily==='weekly'){const n=new Date();const mon=new Date(n.getTime()-((n.getDay()+6)%7)*864e5);return (t.done||'')>=mon.toISOString().slice(0,10)}return !!t.done}
+function renderTodo(){const items=S.todo?.data||[];const d=today();let left=0,h='';items.forEach((t,i)=>{const done=todoDone(t);if(!t.daily&&t.done&&t.done!==d)return;if(!done)left++;
+ const due=t.due?`<span class="pill ${t.due<d&&!done?'red':t.due===d?'':'gray'}">${t.due===d?'오늘':t.due.slice(5).replace('-','/')}</span>`:'';
+ h+=`<li class="${done?'done':''}"><label><input type="checkbox" ${done?'checked':''} onchange="toggleTodo(${i})"><span>${E(t.text)}</span></label>${due}${t.daily?`<span class="tag">${t.daily==='weekly'?'매주':'매일'}</span>`:''}<button class="x" onclick="delTodo(${i})">×</button></li>`});
+ $('todo').innerHTML=h||'<li class=muted>할 일 없음</li>';$('todobadge').textContent=left;$('todobadge').className='badge'+(left?'':' zero')}
+function toggleTodo(i){const items=[...(S.todo?.data||[])];const t=items[i];t.done=todoDone(t)?null:today();save('todo',items)}
+function delTodo(i){if(!confirm('지울까요?'))return;const items=[...(S.todo?.data||[])];items.splice(i,1);save('todo',items)}
+function addTodo(e){e.preventDefault();let text=$('ti').value.trim();if(!text)return;let prio=0,due='';const m=text.match(/(!{1,3})/);if(m){prio=m[1].length;text=text.replace(m[1],'')}
+ const dm=text.match(/@(오늘|내일|모레|\d{1,2}\/\d{1,2})/);if(dm){const d=new Date();const w=dm[1];if(w==='내일')d.setDate(d.getDate()+1);if(w==='모레')d.setDate(d.getDate()+2);if(w.includes('/')){const [mo,da]=w.split('/');d.setMonth(+mo-1,+da)}due=new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);text=text.replace(dm[0],'')}
+ const items=[...(S.todo?.data||[]),{text:text.replace(/\s+/g,' ').trim(),daily:false,done:null,prio,due}];$('ti').value='';save('todo',items)}
+function pstate(p){const steps=p.steps||[];const done=steps.filter(s=>s.done).length;const cur=steps.find(s=>!s.done);const idle=Math.floor((Date.now()-new Date(p.updated||p.created))/864e5);return {done,n:steps.length,cur,idle}}
+function renderProj(){const ps=S.projects?.data||[];let h='',n=0;ps.forEach((p,i)=>{if(p.status!=='active')return;n++;const {done,n:tot,cur,idle}=pstate(p);const rem=p.steps.map((s,k)=>[s,k]).filter(([s])=>!s.done);
+ h+=`<div class="proj ${idle>=3?'stalled':''}"><div class="row"><b>${E(p.title)}</b>${idle>=3?`<span class="pill red">멈춤 ${idle}일</span>`:''}<span class="muted">${done}/${tot}</span></div><div class="bar"><i style="width:${tot?done/tot*100:0}%"></i></div>
+ <ol class="steps">${rem.slice(0,4).map(([s,k],j)=>`<li class="${j?'':'cur'}" onclick="stepToggle(${i},${k})"><span class="chk">${k+1}</span><span>${E(s.name)}</span></li>`).join('')}${rem.length>4?`<li class="muted">… 그 뒤 ${rem.length-4}단계</li>`:''}</ol>
+ ${cur?`<div class="row"><button class="sm" onclick="nextStep(${i})">현재 단계 끝</button><button class="sm ghost" onclick="inbox('chat','${E(p.title)} — 다음 단계 ${E(cur.name)} 진행해줘')">비서에게</button></div>`:'<div class=muted>모든 단계 완료</div>'}
+ <details><summary class="muted">전체 ${tot}단계${p.note?' · '+E(p.note.slice(0,40)):''}</summary><ol class="steps">${p.steps.map((s,k)=>`<li class="${s.done?'ok':(cur&&cur.name===s.name?'cur':'')}" onclick="stepToggle(${i},${k})"><span class="chk">${s.done?'✓':k+1}</span><span>${E(s.name)}</span>${s.done?`<span class="muted">${s.done.slice(5)}</span>`:''}</li>`).join('')}</ol><div class="muted">${E(p.note||'')}</div></details></div>`});
+ $('projects').innerHTML=h||'<p class=muted>진행 중인 일 없음</p>';$('projbadge').textContent=n}
+function stepToggle(i,k){const ps=JSON.parse(JSON.stringify(S.projects?.data||[]));const s=ps[i].steps[k];s.done=s.done?null:today();ps[i].updated=new Date().toISOString().slice(0,19);if(ps[i].steps.every(x=>x.done))ps[i].status='done';save('projects',ps);toast(s.done?'단계 완료':'완료 취소')}
+function nextStep(i){const ps=JSON.parse(JSON.stringify(S.projects?.data||[]));const s=ps[i].steps.find(x=>!x.done);if(!s)return;s.done=today();ps[i].updated=new Date().toISOString().slice(0,19);if(ps[i].steps.every(x=>x.done))ps[i].status='done';save('projects',ps);toast('현재 단계를 끝냈어요')}
+function renderDday(){const d=today();const items=[];(S.todo?.data||[]).forEach(t=>{if(t.due&&!todoDone(t))items.push([t.due,t.text])});(S.projects?.data||[]).forEach(p=>{if(p.due&&p.status==='active')items.push([p.due,p.title+' (현황표)'])});
+ items.sort();$('dday').innerHTML=items.length?'<h3 class="muted" style="font-size:13px;margin:12px 0 4px">마감</h3><ul class="list">'+items.map(([due,t])=>{const n=Math.round((new Date(due)-new Date(d))/864e5);return `<li><span class="pill ${n<0?'red':n<=2?'':'gray'}">${n<0?'D+'+(-n):n===0?'D-day':'D-'+n}</span> ${E(t)}</li>`}).join('')+'</ul>':''}
+function renderContacts(){const cs=S.contacts?.data||[];$('contacts').innerHTML='<table class="oc">'+cs.map(c=>`<tr><td><b>${E(c.name)}</b><div class="muted">${E(c.org||'')}${c.role?' · '+E(c.role):''}</div></td><td>${c.contact?(/^https?:/.test(c.contact)?`<a href="${E(c.contact)}" target="_blank">열기</a>`:/@/.test(c.contact)?`<a href="mailto:${E(c.contact)}">${E(c.contact)}</a>`:E(c.contact)):''}<div class="muted">${E(c.note||'')}</div></td></tr>`).join('')+'</table>'}
+let memoT;function memoSave(){$('memost').textContent='저장 중…';clearTimeout(memoT);memoT=setTimeout(async()=>{await save('memo',{text:$('memo').value});$('memost').textContent='저장됨 '+new Date().toTimeString().slice(0,5)},800)}
+function sendChat(e){e.preventDefault();const v=$('ci').value.trim();if(!v)return;$('ci').value='';inbox('chat',v);$('chat').insertAdjacentHTML('beforeend',`<div class="msg user">${E(v)}<br><span class="muted">보냄 · 맥이 받으면 답해요</span></div>`)}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script></html>
