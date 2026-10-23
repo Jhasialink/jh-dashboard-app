@@ -1,6 +1,6 @@
 <!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
-<title>JH 업무판</title><meta name="theme-color" content="#b08a3e"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="JH 업무판">
+<title>JH 업무 대시보드</title><meta name="theme-color" content="#b08a3e"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="JH 업무 대시보드">
 <style>
 :root{--bg:#f4f1ea;--card:#fff;--ink:#1d2a44;--mute:#7a8191;--line:#e5e0d5;--gold:#b08a3e;--red:#c0392b;--green:#2e8b57;--me:#243a68;--soft:#faf7f0}
 @media (prefers-color-scheme:dark){:root{--bg:#151a24;--card:#1f2633;--ink:#e8e6e1;--mute:#8d95a5;--line:#2e3646;--gold:#d4ad5c;--green:#5cc28a;--me:#34508a;--soft:#262e3d}}
@@ -32,10 +32,10 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px
 .toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:var(--ink);color:var(--card);padding:8px 14px;border-radius:10px;font-size:13px;display:none;z-index:20}
 .tab{display:none}.tab.on{display:block}.time{color:var(--gold);font-weight:600;font-size:13px;margin-right:4px}.chip{display:none}details summary{cursor:pointer}
 </style>
-<header><h1>JH 업무판</h1><span id="head" class="muted"></span><span id="conn" class="muted" style="margin-left:auto"></span></header>
+<header><h1>JH 업무 대시보드</h1><span id="head" class="muted"></span><span id="conn" class="muted" style="margin-left:auto"></span></header>
 <div id="stale" class="stale" hidden></div>
 <main>
-<div class="gate" id="gate"><form onsubmit="login(event)"><h3 style="margin:0 0 8px">JH 업무판</h3><p class="muted">학습 리포트 앱 원장 계정으로 로그인</p>
+<div class="gate" id="gate"><form onsubmit="login(event)"><h3 style="margin:0 0 8px">JH 업무 대시보드</h3><p class="muted">학습 리포트 앱 원장 계정으로 로그인</p>
 <input id="em" type="email" placeholder="이메일" autocomplete="username"><input id="pw" type="password" placeholder="비밀번호" autocomplete="current-password"><button>로그인</button><p class="muted" id="gmsg"></p></form></div>
 <div id="app" hidden>
  <section class="tab on" id="t-today">
