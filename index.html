@@ -35,7 +35,7 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px
 /* 펼친 화면(폴드·태블릿): 탭 대신 격자. 배치는 이 기기에만 저장 */
 .cc{margin-left:auto;display:none;gap:2px}.cc button{border:0;background:none;color:var(--mute);font-size:13px;padding:0 4px}
 @media (min-width:700px){
-  body{padding-bottom:16px}nav{display:none}.tab{display:contents}.tab.on{display:contents}
+  body{padding-bottom:16px}nav{display:none}#app{display:contents}.tab{display:contents}.tab.on{display:contents}
   main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:10px 12px;align-items:start}
   .card{margin:0}.card.wide{grid-column:1/-1}.card h2:hover .cc{display:inline-flex}
   .tiles{grid-template-columns:repeat(4,1fr)}.bcols{grid-template-columns:repeat(2,minmax(0,1fr))}
