@@ -35,13 +35,15 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px
 /* 펼친 화면(폴드·태블릿): 탭 대신 격자. 배치는 이 기기에만 저장 */
 .cc{margin-left:auto;display:none;gap:2px}.cc button{border:0;background:none;color:var(--mute);font-size:13px;padding:0 4px}
 @media (min-width:700px){
-  body{padding-bottom:16px}nav{display:none}#app{display:contents}.tab{display:contents}.tab.on{display:contents}
-  main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:10px 12px;align-items:start}
-  .card{margin:0}.card.wide{grid-column:1/-1}.card h2:hover .cc{display:inline-flex}
+  /* 펼친 화면: 아래 탭 바(오늘·현황표·비서·더보기)는 그대로, 고른 탭의 카드를 격자로 */
+  main{padding:10px 16px}.tab.on{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+  .card{margin:0}.card.wide,#t-proj .card,#t-chat .card{grid-column:1/-1}.card h2:hover .cc{display:inline-flex}
   .tiles{grid-template-columns:repeat(4,1fr)}.bcols{grid-template-columns:repeat(2,minmax(0,1fr))}
-  #hidebar{grid-column:1/-1}
+  #t-chat .chat{min-height:50vh}
+  nav{left:50%;right:auto;transform:translateX(-50%);bottom:12px;width:min(560px,90vw);border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.15);padding-bottom:0}
+  body{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
 }
-@media (min-width:1100px){main{grid-template-columns:repeat(3,minmax(0,1fr))}.bcols{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (min-width:1100px){.tab.on{grid-template-columns:repeat(3,minmax(0,1fr))}.bcols{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 <header><h1>JH 업무 대시보드</h1><span id="head" class="muted"></span><span id="conn" class="muted" style="margin-left:auto"></span></header>
 <div id="stale" class="stale" hidden></div>
@@ -51,22 +53,22 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px
 <div id="app" hidden>
  <section class="tab on" id="t-today">
   <div class="card snap" data-id="brief"><h2>브리핑<span class="cc"><button onclick="pcSize('brief')">⇔</button><button onclick="pcHide('brief')">×</button></span></h2><div id="brief"></div></div>
-  <div class="card" data-id="todo"><h2>오늘 할 일 <span class="badge" id="todobadge">0</span><span class="cc"><button onclick="pcSize(\'todo\')">⇔</button><button onclick="pcHide(\'todo\')">×</button></span></h2><ul class="todo" id="todo"></ul>
+  <div class="card" data-id="todo"><h2>오늘 할 일 <span class="badge" id="todobadge">0</span><span class="cc"><button onclick="pcSize('todo')">⇔</button><button onclick="pcHide('todo')">×</button></span></h2><ul class="todo" id="todo"></ul>
    <form class="inline" onsubmit="addTodo(event)"><input id="ti" placeholder="할 일 추가 (!!!높음 @내일 돼요)"><button class="sm">추가</button></form>
    <div id="dday"></div></div>
  </section>
- <section class="tab" id="t-proj"><div class="card" data-id="proj"><h2>진행 현황표 <span class="badge" id="projbadge">0</span><span class="cc"><button onclick="pcSize(\'proj\')">⇔</button><button onclick="pcHide(\'proj\')">×</button></span></h2><div id="projects"></div></div></section>
- <section class="tab" id="t-chat"><div class="card" data-id="chat"><h2>비서 <span id="pend" class="live" hidden>● 처리 중</span><span class="cc"><button onclick="pcSize(\'chat\')">⇔</button><button onclick="pcHide(\'chat\')">×</button></span></h2><div class="chat snap" id="chat"></div>
+ <section class="tab" id="t-proj"><div class="card" data-id="proj"><h2>진행 현황표 <span class="badge" id="projbadge">0</span><span class="cc"><button onclick="pcSize('proj')">⇔</button><button onclick="pcHide('proj')">×</button></span></h2><div id="projects"></div></div></section>
+ <section class="tab" id="t-chat"><div class="card" data-id="chat"><h2>비서 <span id="pend" class="live" hidden>● 처리 중</span><span class="cc"><button onclick="pcSize('chat')">⇔</button><button onclick="pcHide('chat')">×</button></span></h2><div class="chat snap" id="chat"></div>
   <form class="inline" onsubmit="sendChat(event)"><input id="ci" placeholder="비서에게 말하기 (맥이 켜져 있으면 바로 답해요)"><button class="sm">보내기</button></form>
   <div class="row" style="margin-top:8px"><button class="sm ghost" onclick="inbox('check','')">다시 브리핑</button></div></div></section>
  <section class="tab" id="t-more">
-  <div class="card" data-id="memo"><h2>메모<span class="cc"><button onclick="pcSize(\'memo\')">⇔</button><button onclick="pcHide(\'memo\')">×</button></span></h2><textarea id="memo" rows="8" oninput="memoSave()" placeholder="자유 메모 (맥과 실시간 공유)"></textarea><div class="muted" id="memost"></div></div>
+  <div class="card" data-id="memo"><h2>메모<span class="cc"><button onclick="pcSize('memo')">⇔</button><button onclick="pcHide('memo')">×</button></span></h2><textarea id="memo" rows="8" oninput="memoSave()" placeholder="자유 메모 (맥과 실시간 공유)"></textarea><div class="muted" id="memost"></div></div>
   <div class="card snap" data-id="collab"><h2>코워크 협업함<span class="cc"><button onclick="pcSize('collab')">⇔</button><button onclick="pcHide('collab')">×</button></span></h2><div id="collab"></div><div class="row acts2"><button class="sm" onclick="inbox('chat','코워크 협업함 SNS로/ 의 새 메시지를 규칙.md대로 처리해줘')">비서에게 협업함 처리</button></div></div>
   <div class="card snap" data-id="mail"><h2>회사 메일<span class="cc"><button onclick="pcSize('mail')">⇔</button><button onclick="pcHide('mail')">×</button></span></h2><div id="mail"></div><div class="row acts2"><button class="sm" onclick="inbox('chat','회사 메일 확인하고, 업무 회신이 있으면 답장 초안까지 써줘')">📬 비서에게 메일 확인</button><button class="sm ghost" onclick="inbox('routine','jh-mail-check')">메일 확인 루틴 지금 실행</button></div></div>
   <div class="card snap" data-id="oc"><h2>온라인 클래스<span class="cc"><button onclick="pcSize('oc')">⇔</button><button onclick="pcHide('oc')">×</button></span></h2><div id="oc"></div><div class="row acts2"><button class="sm ghost" onclick="inbox('chat','온라인 클래스 이번 주 출석 상황 정리해줘. 결석·미기록 있으면 알려줘')">비서에게 출석 점검</button></div></div>
   <div class="card snap" data-id="stats"><h2>이번 주 성과<span class="cc"><button onclick="pcSize('stats')">⇔</button><button onclick="pcHide('stats')">×</button></span></h2><div id="stats"></div></div>
   <div class="card snap" data-id="act"><h2>세션 기록<span class="cc"><button onclick="pcSize('act')">⇔</button><button onclick="pcHide('act')">×</button></span></h2><div id="act"></div><div id="sessions"></div></div>
-  <div class="card" data-id="contacts"><h2>연락처<span class="cc"><button onclick="pcSize(\'contacts\')">⇔</button><button onclick="pcHide(\'contacts\')">×</button></span></h2><div id="contacts"></div></div>
+  <div class="card" data-id="contacts"><h2>연락처<span class="cc"><button onclick="pcSize('contacts')">⇔</button><button onclick="pcHide('contacts')">×</button></span></h2><div id="contacts"></div></div>
   <div class="card"><button class="sm ghost" onclick="logout()">로그아웃</button></div>
  </section>
 </div>
