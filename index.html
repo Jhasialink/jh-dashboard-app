@@ -1,11 +1,11 @@
 <!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
-<title>JH 업무 대시보드</title><meta name="theme-color" content="#b08a3e"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>JH 업무 대시보드</title><meta name="theme-color" content="#f6f7f9"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="JH 업무 대시보드">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
-/* 폰 앱: 맥 대시보드와 같은 결(따뜻한 종이 바탕·흰 카드·절제된 금색). 엄지로 쓰기 좋게 큼직하게 */
-:root{--bg:#f4f2ed;--card:#fff;--ink:#1b2333;--ink2:#3d4658;--mute:#8a909c;--line:#e9e5dc;--line2:#f1eee8;--soft:#f8f6f1;--gold:#a8843e;--gold2:#c9a35a;--goldbg:rgba(168,132,62,.11);--navy:#24365c;--me:#24365c;--red:#c2412d;--redbg:rgba(194,65,45,.09);--green:#2f8a5b;--greenbg:rgba(47,138,91,.11);--blue:#2f62b0;--sh:0 1px 2px rgba(27,35,51,.04),0 2px 10px rgba(27,35,51,.04);--hh:96px}
-@media (prefers-color-scheme:dark){:root{--bg:#11151c;--card:#191f29;--ink:#ebe8e1;--ink2:#c4c8d0;--mute:#8b93a3;--line:#262d39;--line2:#212834;--soft:#1e2430;--gold:#d4ae66;--gold2:#e2c07e;--goldbg:rgba(212,174,102,.13);--navy:#3a5590;--me:#34508a;--redbg:rgba(194,65,45,.16);--green:#5cc28a;--greenbg:rgba(92,194,138,.13);--blue:#7aa5e8;--sh:0 1px 2px rgba(0,0,0,.3)}}
+/* 폰 앱: 맥 대시보드와 같은 시안 C(흰 바탕·인디고 강조·카드별 색 띠). 엄지로 쓰기 좋게 큼직하게 */
+:root{--bg:#f6f7f9;--card:#fff;--ink:#16181d;--ink2:#41464f;--mute:#8b909a;--line:#e7e9ee;--line2:#eff1f4;--soft:#f8f9fb;--gold:#4f46e5;--gold2:#7c74f0;--goldbg:rgba(79,70,229,.09);--navy:#4338ca;--me:#4f46e5;--red:#e5484d;--redbg:rgba(229,72,77,.09);--green:#18a058;--greenbg:rgba(24,160,88,.11);--blue:#2563eb;--sh:0 1px 2px rgba(16,24,40,.04);--hh:96px}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#16181d;--ink:#eceef2;--ink2:#c2c6ce;--mute:#8b909a;--line:#262a33;--line2:#1f232b;--soft:#1b1e25;--gold:#8b85ff;--gold2:#a8a3ff;--goldbg:rgba(139,133,255,.15);--navy:#6d68f0;--me:#5b54e8;--redbg:rgba(229,72,77,.16);--green:#3ccf86;--greenbg:rgba(60,207,134,.13);--blue:#7aa5e8;--sh:0 1px 2px rgba(0,0,0,.3)}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}[hidden]{display:none!important}
 html,body{overflow-x:hidden;width:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo",sans-serif;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
@@ -27,6 +27,10 @@ main{padding:4px 12px}
 .badge{background:var(--goldbg);color:var(--gold);border-radius:999px;padding:0 8px;font-size:12px;font-weight:600;line-height:20px}.badge.zero{background:var(--line2);color:var(--mute)}
 h3{font-size:12px;font-weight:600;color:var(--mute);margin:14px 0 6px}
 .cc{display:none}
+/* 카드 종류별 위쪽 색 띠 (맥과 같음) */
+.card[data-id]{border-top:3px solid var(--cc,var(--line))}
+.card[data-id=brief]{--cc:#4f46e5}.card[data-id=todo]{--cc:#f59e0b}.card[data-id=proj]{--cc:#8b5cf6}.card[data-id=chat]{--cc:#6366f1}.card[data-id=mail]{--cc:#0ea5e9}.card[data-id=collab]{--cc:#ec4899}.card[data-id=oc]{--cc:#06b6d4}.card[data-id=memo]{--cc:#eab308}.card[data-id=stats]{--cc:#f43f5e}.card[data-id=act]{--cc:#6366f1}.card[data-id=contacts]{--cc:#64748b}
+.chip{background:var(--goldbg);color:var(--gold)}
 /* 맥에서 온 화면 조각: 버튼·입력은 숨기고(폰 버튼으로 대신), 글은 읽기 좋게 */
 .snap{overflow-x:auto}.snap button:not(.fchip),.snap .x,.snap form,.snap .sm,.snap .cardctl,.snap .acts,.snap input,.snap .hov,.snap .rowact{display:none!important}.snap .smodal{display:none}
 .snap button.fchip{pointer-events:none}
