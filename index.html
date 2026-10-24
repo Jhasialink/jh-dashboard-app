@@ -8,7 +8,7 @@
 @media (prefers-color-scheme:dark){:root{--bg:#11151c;--card:#191f29;--ink:#ebe8e1;--ink2:#c4c8d0;--mute:#8b93a3;--line:#262d39;--line2:#212834;--soft:#1e2430;--gold:#d4ae66;--gold2:#e2c07e;--goldbg:rgba(212,174,102,.13);--navy:#3a5590;--me:#34508a;--redbg:rgba(194,65,45,.16);--green:#5cc28a;--greenbg:rgba(92,194,138,.13);--blue:#7aa5e8;--sh:0 1px 2px rgba(0,0,0,.3)}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}[hidden]{display:none!important}
 html,body{overflow-x:hidden;width:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo",sans-serif;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;padding-bottom:calc(78px + env(safe-area-inset-bottom))}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo",sans-serif;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
 a{color:inherit} b{font-weight:600} ul{padding-left:18px;margin:0} li{margin:3px 0}
 .muted{color:var(--mute);font-size:13px}
 /* 머리 */
@@ -79,7 +79,7 @@ h3{font-size:12px;font-weight:600;color:var(--mute);margin:14px 0 6px}
 .msg.user{align-self:flex-end;background:var(--me);color:#fff;border-bottom-right-radius:5px}.msg.user .muted{color:#c9d2e6}.msg.user a{color:#fff}
 .msg.assistant{align-self:flex-start;background:var(--soft);border:1px solid var(--line2);border-bottom-left-radius:5px}.msg.err{border:1px solid var(--red)}.msg .muted{display:block;font-size:11px;margin-top:4px}
 .live{color:var(--green);font-size:13px}
-#t-chat .card{display:flex;flex-direction:column;height:calc(100dvh - var(--hh) - 92px - env(safe-area-inset-bottom));margin:0}
+#t-chat .card{display:flex;flex-direction:column;height:calc(100dvh - var(--hh) - 80px - env(safe-area-inset-bottom));margin:0}
 #t-chat .chat{flex:1;overflow-y:auto;margin:0 -6px;padding:2px 6px 8px;overscroll-behavior:contain}
 .quick{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:8px 0 0}.quick::-webkit-scrollbar{display:none}
 .quick button{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--ink2);border-radius:999px;padding:6px 12px;font:inherit;font-size:12.5px}
@@ -93,7 +93,8 @@ button.ghost{background:none;color:var(--ink2);border:1px solid var(--line)}
 button:active{transform:scale(.96)}
 .acts2{margin-top:12px}
 /* 아래 탭 바 */
-nav{position:fixed;left:10px;right:10px;bottom:calc(8px + env(safe-area-inset-bottom));display:flex;z-index:10;background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:saturate(1.4) blur(16px);-webkit-backdrop-filter:saturate(1.4) blur(16px);border:1px solid var(--line);border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.12);padding:5px}
+/* 아래 탭 바: 화면 맨 아래(홈 버튼 바로 위)에 붙고, 내용은 그 위에서 끝난다 → 겹치지 않음 */
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;z-index:10;background:var(--card);border-top:1px solid var(--line);padding:4px 6px calc(4px + env(safe-area-inset-bottom))}
 nav button{flex:1;border:0;background:none;padding:6px 0 5px;font:inherit;font-size:11.5px;color:var(--mute);border-radius:15px;position:relative;transition:background .2s,color .2s}
 nav button span{display:block;font-size:19px;line-height:1.2;filter:grayscale(1);opacity:.75}
 nav button.on{color:var(--ink);font-weight:600;background:var(--goldbg)} nav button.on span{filter:none;opacity:1}
@@ -103,7 +104,7 @@ nav button i:empty{display:none}
 .gate{display:flex;align-items:center;justify-content:center;min-height:80vh}.gate form{background:var(--card);padding:26px 22px;border-radius:18px;width:min(360px,92vw);box-shadow:var(--sh);border:1px solid var(--line)}
 .gate input{width:100%;font:inherit;font-size:16px;padding:13px;border:1px solid var(--line);border-radius:12px;margin:6px 0;background:var(--soft);color:var(--ink)}
 .gate button{width:100%;margin-top:10px;background:var(--ink);color:var(--card);border:0;border-radius:12px;padding:13px;font:inherit;font-size:16px;font-weight:600}
-.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--card);padding:9px 15px;border-radius:12px;font-size:13.5px;display:none;z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.2);white-space:nowrap}
+.toast{position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--card);padding:9px 15px;border-radius:12px;font-size:13.5px;display:none;z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.2);white-space:nowrap}
 .tab{display:none}.tab.on{display:block}.chip{display:none}details summary{cursor:pointer}
 #memo{min-height:150px;line-height:1.7}
 /* 펼친 화면(폴드·태블릿): 아래 탭 바는 그대로, 고른 탭의 카드를 격자로 */
@@ -112,7 +113,7 @@ nav button i:empty{display:none}
   .card{margin:0}.card.wide,#t-proj .card,#t-chat .card{grid-column:1/-1}
   .bcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));overflow:visible;margin:10px 0 4px;padding:0}.bcol{flex:none}.bdots{display:none}
   .tiles{grid-template-columns:repeat(4,1fr)}
-  nav{left:50%;right:auto;transform:translateX(-50%);width:min(520px,90vw)}
+  nav{padding-left:calc(50% - 280px);padding-right:calc(50% - 280px)}
   #t-chat .card{max-width:860px;justify-self:center;width:100%}
   .snap table:has(th:nth-child(5)){min-width:0}
 }
