@@ -27,6 +27,12 @@ main{padding:4px 12px}
 .badge{background:var(--goldbg);color:var(--gold);border-radius:999px;padding:0 8px;font-size:12px;font-weight:600;line-height:20px}.badge.zero{background:var(--line2);color:var(--mute)}
 h3{font-size:12px;font-weight:600;color:var(--mute);margin:14px 0 6px}
 .cc{display:none}
+/* 비서 케어 띠 */
+#care:empty{display:none}.care{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:14px;padding:10px 14px;margin:0 0 12px;box-shadow:var(--sh)}
+.chd{display:flex;gap:8px;align-items:baseline;margin-bottom:2px}.chd b{font-size:13.5px;color:var(--gold)}.care ul{list-style:none;margin:0;padding:0}
+.cv{display:flex;gap:8px;align-items:center;padding:7px 0;font-size:14px;border-bottom:1px solid var(--line2);margin:0}.cv:last-child{border:0}
+.cl{flex:0 0 auto;font-size:11px;font-weight:700;border-radius:5px;padding:1px 6px;background:var(--line2);color:var(--mute)}.cv.now .cl{background:var(--gold);color:#fff}.cv.miss .cl{background:var(--redbg);color:var(--red)}.cv.soon .cl{background:var(--goldbg);color:var(--gold)}.cv.tip .cl{background:var(--greenbg);color:var(--green)}
+.ct{flex:1;min-width:0}.snap .care .ca{display:none}#care.snap button.pok{display:inline-block!important;border:1px solid var(--line);background:var(--card);color:var(--ink2);border-radius:8px;padding:3px 8px;font:inherit;font-size:12px}
 /* 카드 종류별 위쪽 색 띠 (맥과 같음) */
 .card[data-id]{border-top:3px solid var(--cc,var(--line))}
 .card[data-id=brief]{--cc:#4f46e5}.card[data-id=todo]{--cc:#f59e0b}.card[data-id=proj]{--cc:#8b5cf6}.card[data-id=chat]{--cc:#6366f1}.card[data-id=mail]{--cc:#0ea5e9}.card[data-id=collab]{--cc:#ec4899}.card[data-id=oc]{--cc:#06b6d4}.card[data-id=memo]{--cc:#eab308}.card[data-id=stats]{--cc:#f43f5e}.card[data-id=act]{--cc:#6366f1}.card[data-id=contacts]{--cc:#64748b}
@@ -130,6 +136,7 @@ nav button i:empty{display:none}
 <input id="em" type="email" placeholder="이메일" autocomplete="username"><input id="pw" type="password" placeholder="비밀번호" autocomplete="current-password"><button>로그인</button><p class="muted" id="gmsg"></p></form></div>
 <div id="app" hidden>
  <section class="tab on" id="t-today">
+  <div id="care" class="snap"></div>
   <div class="card snap" data-id="brief"><h2>브리핑<span class="cc"><button onclick="pcSize('brief')">⇔</button><button onclick="pcHide('brief')">×</button></span></h2><div id="brief"></div></div>
   <div class="card" data-id="todo"><h2>오늘 할 일 <span class="badge" id="todobadge">0</span><span class="cc"><button onclick="pcSize('todo')">⇔</button><button onclick="pcHide('todo')">×</button></span></h2><ul class="todo" id="todo"></ul>
    <form class="inline" onsubmit="addTodo(event)"><input id="ti" placeholder="할 일 추가 (!!!높음 @내일 돼요)"><button class="sm">추가</button></form>
@@ -160,6 +167,7 @@ const $=id=>document.getElementById(id);const E=s=>String(s??'').replace(/[&<>"'
 const db=supabase.createClient(JH_CFG.url,JH_CFG.key);let UID=null,S={};const today=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
 function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2500)}
 function tab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.id==='t-'+t));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));localStorage.setItem('tab',t);window.scrollTo(0,0);hh();if(t==='chat')chatBottom()}
+function careBtns(){document.querySelectorAll('#care .cv').forEach(li=>{const id=(li.querySelector('.ca button')?.getAttribute('onclick')||'').match(/[0-9a-f]{10}/)?.[0];if(!id||li.querySelector('.pok'))return;const b=document.createElement('button');b.className='pok';b.textContent='알았어요';b.onclick=()=>{inbox('care_ok',id);li.remove()};li.append(b)})}
 function hh(){document.documentElement.style.setProperty('--hh',$('hdr').offsetHeight+($('stale').hidden?0:$('stale').offsetHeight+8)+'px')}
 function chatBottom(){const c=$('chat');requestAnimationFrame(()=>c.scrollTop=c.scrollHeight)}
 function ask(t){inbox('chat',t);$('chat').insertAdjacentHTML('beforeend',`<div class="msg user">${E(t)}<span class="muted">보냄 · 맥이 받으면 답해요</span></div>`);chatBottom()}
@@ -183,7 +191,7 @@ function staleness(){const s=S.snapshot?.data;const st=$('stale'),c=$('conn');if
  const age=(Date.now()-new Date(s.at))/60000;c.className=age<3?'ok':age<90?'warn':'bad';c.textContent=age<3?'실시간':age<90?`맥 ${Math.round(age)}분 전`:'맥 꺼짐';
  st.hidden=age<90;st.textContent=`맥 마지막 갱신 ${s.at.slice(5,16).replace('T',' ')} — 맥이 꺼져 있거나 잠든 것 같아요. 할 일·현황표·메모는 그래도 저장돼요.`;hh()}
 // ---- 렌더 ----
-function render(k){const s=S.snapshot?.data||{};if(!k||k==='snapshot'){$('head').innerHTML=s.head||'';for(const id of ['brief','mail','collab','oc','stats','act','sessions'])$(id).innerHTML=s[id]||'<p class=muted>맥에서 올린 내용 없음</p>';const atB=$('chat').scrollHeight-$('chat').scrollTop-$('chat').clientHeight<80;$('chat').innerHTML=s.chat||'';$('pend').hidden=!s.pending;$('nb-chat').textContent=s.pending?'…':'';if(atB||!k)chatBottom();briefDots();staleness()}
+function render(k){const s=S.snapshot?.data||{};if(!k||k==='snapshot'){$('head').innerHTML=s.head||'';for(const id of ['brief','mail','collab','oc','stats','act','sessions'])$(id).innerHTML=s[id]||'<p class=muted>맥에서 올린 내용 없음</p>';$('care').innerHTML=s.care||'';careBtns();const atB=$('chat').scrollHeight-$('chat').scrollTop-$('chat').clientHeight<80;$('chat').innerHTML=s.chat||'';$('pend').hidden=!s.pending;$('nb-chat').textContent=s.pending?'…':'';if(atB||!k)chatBottom();briefDots();staleness()}
  if(!k||k==='todo')renderTodo();if(!k||k==='projects')renderProj();if(!k||k==='todo'||k==='projects')renderDday();
  if((!k||k==='memo')&&document.activeElement!==$('memo'))$('memo').value=S.memo?.data?.text||'';if(!k||k==='contacts')renderContacts()}
 function todoDone(t){const d=today();if(t.daily===true)return t.done===d;if(t.daily==='weekly'){const n=new Date();const mon=new Date(n.getTime()-((n.getDay()+6)%7)*864e5);return (t.done||'')>=mon.toISOString().slice(0,10)}return !!t.done}
