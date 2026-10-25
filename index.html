@@ -1,11 +1,11 @@
 <!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
-<title>JH 업무 대시보드</title><meta name="theme-color" content="#f6f7f9"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>JH 업무 대시보드</title><meta name="theme-color" content="#fbfcfd"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="JH 업무 대시보드">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
-/* 폰 앱: 맥 대시보드와 같은 시안 C(흰 바탕·인디고 강조·카드별 색 띠). 엄지로 쓰기 좋게 큼직하게 */
-:root{--bg:#f6f7f9;--card:#fff;--ink:#16181d;--ink2:#41464f;--mute:#8b909a;--line:#e7e9ee;--line2:#eff1f4;--soft:#f8f9fb;--gold:#4f46e5;--gold2:#7c74f0;--goldbg:rgba(79,70,229,.09);--navy:#4338ca;--me:#4f46e5;--red:#e5484d;--redbg:rgba(229,72,77,.09);--green:#18a058;--greenbg:rgba(24,160,88,.11);--blue:#2563eb;--sh:0 1px 2px rgba(16,24,40,.04);--hh:96px}
-@media (prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#16181d;--ink:#eceef2;--ink2:#c2c6ce;--mute:#8b909a;--line:#262a33;--line2:#1f232b;--soft:#1b1e25;--gold:#8b85ff;--gold2:#a8a3ff;--goldbg:rgba(139,133,255,.15);--navy:#6d68f0;--me:#5b54e8;--redbg:rgba(229,72,77,.16);--green:#3ccf86;--greenbg:rgba(60,207,134,.13);--blue:#7aa5e8;--sh:0 1px 2px rgba(0,0,0,.3)}}
+/* 폰 앱: 맥 대시보드와 같은 'Mercury' 결(밝은 라벤더 바탕·메르큐리 인디고·색 한 단계로 띄움·알약 버튼). 엄지로 쓰기 좋게 큼직하게 */
+:root{--bg:#fbfcfd;--card:#fff;--ink:#28253b;--ink2:#554e7b;--mute:#70707d;--line:#ececf3;--line2:#f2f2f8;--soft:#f7f7fd;--gold:#5266eb;--gold2:#9cb4e8;--goldbg:#edecfb;--navy:#3d4fd0;--me:#5266eb;--red:#c94a5c;--redbg:#fbeaed;--green:#2f9d6a;--greenbg:#e5f5ee;--blue:#5266eb;--sh:0 1px 2px rgba(40,37,59,.03);--hh:96px}
+@media (prefers-color-scheme:dark){:root{--bg:#171721;--card:#1e1e2a;--ink:#ededf3;--ink2:#c3c3cc;--mute:#8f8fa0;--line:#2a2a3a;--line2:#252534;--soft:#232331;--gold:#8b9bff;--gold2:#9cb4e8;--goldbg:rgba(139,155,255,.14);--navy:#9cb4e8;--me:#5266eb;--redbg:rgba(201,74,92,.18);--green:#5cc28a;--greenbg:rgba(92,194,138,.13);--blue:#9cb4e8;--sh:0 1px 2px rgba(0,0,0,.25)}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}[hidden]{display:none!important}
 html,body{overflow-x:hidden;width:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo",sans-serif;letter-spacing:-.01em;-webkit-font-smoothing:antialiased;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
@@ -34,7 +34,7 @@ h3{font-size:12px;font-weight:600;color:var(--mute);margin:14px 0 6px}
 .cl{flex:0 0 auto;font-size:11px;font-weight:700;border-radius:5px;padding:1px 6px;background:var(--line2);color:var(--mute)}.cv.now .cl{background:var(--gold);color:#fff}.cv.miss .cl{background:var(--redbg);color:var(--red)}.cv.soon .cl{background:var(--goldbg);color:var(--gold)}.cv.tip .cl{background:var(--greenbg);color:var(--green)}
 .ct{flex:1;min-width:0}.snap .care .ca{display:none}#care.snap button.pok{display:inline-block!important;border:1px solid var(--line);background:var(--card);color:var(--ink2);border-radius:8px;padding:3px 8px;font:inherit;font-size:12px}
 /* 카드 종류별 위쪽 색 띠 (맥과 같음) */
-.card[data-id]{border-top:3px solid var(--cc,var(--line))}
+.card[data-id]{border-top:1px solid var(--line)}  /* Mercury: 색 띠 대신 색 한 단계 */
 .card[data-id=brief]{--cc:#4f46e5}.card[data-id=todo]{--cc:#f59e0b}.card[data-id=proj]{--cc:#8b5cf6}.card[data-id=chat]{--cc:#6366f1}.card[data-id=mail]{--cc:#0ea5e9}.card[data-id=collab]{--cc:#ec4899}.card[data-id=oc]{--cc:#06b6d4}.card[data-id=memo]{--cc:#eab308}.card[data-id=stats]{--cc:#f43f5e}.card[data-id=act]{--cc:#6366f1}.card[data-id=contacts]{--cc:#64748b}
 .chip{background:var(--goldbg);color:var(--gold)}
 /* 맥에서 온 화면 조각: 버튼·입력은 숨기고(폰 버튼으로 대신), 글은 읽기 좋게 */
@@ -128,6 +128,8 @@ nav button i:empty{display:none}
   .snap table:has(th:nth-child(5)){min-width:0}
 }
 @media (min-width:1100px){.tab.on{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.care{background:var(--goldbg);border:0}.card h2{font-weight:550}.bhead{font-weight:500}.tile b{font-weight:500}
+button.sm,form.inline button.sm{background:var(--gold);color:#fff;border-radius:40px}button.ghost{background:none;color:var(--ink2)}.quick button{border-radius:40px}
 </style>
 <header id="hdr"><div class="htop"><h1>JH 업무 대시보드</h1><span id="conn">연결 중</span></div><span id="head"></span></header>
 <div id="stale" class="stale" hidden></div>
