@@ -73,6 +73,9 @@ h3{font-size:12px;font-weight:600;color:var(--mute);margin:14px 0 6px}
 .tooluse{font-size:11.5px;color:var(--mute);padding:0 6px}.msg.pend{opacity:.6}
 /* 더보기 업무별 소제목 */
 .msec{margin:18px 4px 8px;font-size:12px;font-weight:700;color:var(--mute);letter-spacing:.02em}.msec:first-child{margin-top:4px}
+/* 길게 눌러 끌기 */
+body.sorting{user-select:none;-webkit-user-select:none}.lifting{position:relative;z-index:5;background:var(--card)!important;box-shadow:0 10px 28px rgba(40,37,59,.18),0 0 0 2px var(--gold);border-radius:10px;transform:scale(1.02)}
+.todo li,.hit[data-todo]{touch-action:pan-y;-webkit-touch-callout:none}
 /* 카드 종류별 위쪽 색 띠 (맥과 같음) */
 .card[data-id]{border-top:1px solid var(--line)}  /* Mercury: 색 띠 대신 색 한 단계 */
 .card[data-id=brief]{--cc:#4f46e5}.card[data-id=todo]{--cc:#f59e0b}.card[data-id=proj]{--cc:#8b5cf6}.card[data-id=chat]{--cc:#6366f1}.card[data-id=mail]{--cc:#0ea5e9}.card[data-id=collab]{--cc:#ec4899}.card[data-id=oc]{--cc:#06b6d4}.card[data-id=memo]{--cc:#eab308}.card[data-id=stats]{--cc:#f43f5e}.card[data-id=act]{--cc:#6366f1}.card[data-id=contacts]{--cc:#64748b}
@@ -282,7 +285,7 @@ function render(k){const s=S.snapshot?.data||{};if(!k||k==='snapshot'){$('head')
 function todoDone(t){const d=today();if(t.daily===true)return t.done===d;if(t.daily==='weekly'){const n=new Date();const mon=new Date(n.getTime()-((n.getDay()+6)%7)*864e5);return (t.done||'')>=mon.toISOString().slice(0,10)}return !!t.done}
 function renderTodo(){const items=S.todo?.data||[];const d=today();let left=0,h='';items.forEach((t,i)=>{const done=todoDone(t);if(!t.daily&&t.done&&t.done!==d)return;if(!done)left++;
  const due=t.due?`<span class="pill ${t.due<d&&!done?'red':t.due===d?'':'gray'}">${t.due===d?'오늘':t.due.slice(5).replace('-','/')}</span>`:'';
- h+=`<li class="${done?'done':''}"><label><input type="checkbox" ${done?'checked':''} onchange="toggleTodo(${i})"><span>${E(t.text)}</span></label>${due}${t.daily?`<span class="tag">${t.daily==='weekly'?'매주':'매일'}</span>`:''}<button class="x" onclick="delTodo(${i})">×</button></li>`});
+ h+=`<li class="${done?'done':''}" data-i="${i}"><label><input type="checkbox" ${done?'checked':''} onchange="toggleTodo(${i})"><span>${E(t.text)}</span></label>${due}${t.daily?`<span class="tag">${t.daily==='weekly'?'매주':'매일'}</span>`:''}<button class="x" onclick="delTodo(${i})">×</button></li>`});
  $('todo').innerHTML=h||'<li class=muted>할 일 없음</li>';$('todobadge').textContent=left;$('todobadge').className='badge'+(left?'':' zero');$('nb-today').textContent=left||''}
 function toggleTodo(i){const items=[...(S.todo?.data||[])];const t=items[i];t.done=todoDone(t)?null:today();save('todo',items)}
 function delTodo(i){if(!confirm('지울까요?'))return;const items=[...(S.todo?.data||[])];items.splice(i,1);save('todo',items)}
@@ -313,6 +316,20 @@ function pcSize(id){const w=PL.wide||[];const i=w.indexOf(id);i<0?w.push(id):w.s
 function pcHide(id){PL.hidden=[...(PL.hidden||[]),id];savePL();applyPL();toast('숨겼어요 (맨 아래에서 복구)')}
 function pcShow(id){PL.hidden=(PL.hidden||[]).filter(x=>x!==id);savePL();applyPL()}
 applyPL();
-{const _r=render;render=function(k){_r(k);cacheS()}}  // 그릴 때마다 폰에 저장
+{const _r=render;render=function(k){if(DRAGGING)return;_r(k);cacheS()}}
+// ---- 길게 눌러(0.35초) 끌어서 할 일 순서 바꾸기 (맥과 같음) ----
+var DRAGGING=false;
+function sortable(root,itemSel,{group=()=>'',onDrop}){if(!root)return;let t=null,it=null,sx=0,sy=0,lifted=false;const cancel=()=>{clearTimeout(t);t=null};
+ root.addEventListener('pointerdown',e=>{if(e.target.closest('input,button,a,textarea,form'))return;const el=e.target.closest(itemSel);if(!el||!root.contains(el))return;sx=e.clientX;sy=e.clientY;lifted=false;const pid=e.pointerId;
+  t=setTimeout(()=>{it=el;lifted=true;DRAGGING=true;el.classList.add('lifting');document.body.classList.add('sorting');try{root.setPointerCapture(pid)}catch{}if(navigator.vibrate)navigator.vibrate(15)},350)});
+ root.addEventListener('pointermove',e=>{if(!it){if(t&&Math.hypot(e.clientX-sx,e.clientY-sy)>8)cancel();return}e.preventDefault();const o=document.elementFromPoint(e.clientX,e.clientY)?.closest(itemSel);
+  if(!o||o===it||!root.contains(o)||group(o)!==group(it))return;const r=o.getBoundingClientRect();e.clientY<r.top+r.height/2?o.before(it):o.after(it)});
+ const end=()=>{cancel();if(!it)return;const el=it;it=null;DRAGGING=false;el.classList.remove('lifting');document.body.classList.remove('sorting');onDrop(el)};
+ root.addEventListener('pointerup',end);root.addEventListener('pointercancel',end);
+ root.addEventListener('click',e=>{if(lifted){e.preventDefault();e.stopPropagation();lifted=false}},true);
+ root.addEventListener('touchmove',e=>{if(it)e.preventDefault()},{passive:false});root.addEventListener('contextmenu',e=>{if(it||t)e.preventDefault()})}
+function todoOrder(idx){const items=[...(S.todo?.data||[])],slots=[...idx].sort((a,b)=>a-b),picked=idx.map(k=>items[k]);slots.forEach((p,j)=>items[p]=picked[j]);save('todo',items);toast('순서를 바꿨어요')}
+sortable($('todo'),'li[data-i]',{onDrop:()=>todoOrder([...document.querySelectorAll('#todo li[data-i]')].map(l=>+l.dataset.i))});
+sortable($('hlist'),'.hit[data-todo]',{group:el=>el.dataset.g,onDrop:()=>todoOrder([...document.querySelectorAll('#hlist .hit[data-todo]')].map(h=>+h.dataset.todo))});  // 그릴 때마다 폰에 저장
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></html>
