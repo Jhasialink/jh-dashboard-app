@@ -216,6 +216,7 @@ button.sm,form.inline button.sm{background:var(--gold);color:#fff;border-radius:
 <script src="config.js"></script>
 <script>
 const $=id=>document.getElementById(id);const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LS={get:k=>{try{return JSON.parse(localStorage.getItem(k)||'null')}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
 const db=supabase.createClient(JH_CFG.url,JH_CFG.key);let UID=null,S={};const today=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
 function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2500)}
 function tab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.id==='t-'+t));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));localStorage.setItem('tab',t);window.scrollTo(0,0);hh();if(t==='chat')chatBottom()}
@@ -250,14 +251,28 @@ function briefDots(){const b=document.querySelector('#brief .bcols');if(!b)retur
  const n=b.children.length;d.innerHTML='<i></i>'.repeat(n);const upd=()=>{const k=Math.round(b.scrollLeft/(b.children[0]?.offsetWidth+10||1));[...d.children].forEach((x,j)=>x.classList.toggle('on',j===k))};b.onscroll=upd;upd()}
 async function login(e){e.preventDefault();$('gmsg').textContent='…';const {error}=await db.auth.signInWithPassword({email:$('em').value.trim(),password:$('pw').value});$('gmsg').textContent=error?'로그인 실패: '+error.message:''}
 async function logout(){await db.auth.signOut();location.reload()}
-if(location.hash==='#test'){fetch('_test.json').then(r=>r.json()).then(rows=>{for(const r of rows)S[r.key]=r;UID='test';$('gate').hidden=true;$('app').hidden=false;render();tab(new URLSearchParams(location.search).get('tab')||'today')})}else db.auth.onAuthStateChange((ev,sess)=>{if(sess){UID=sess.user.id;$('gate').hidden=true;$('app').hidden=false;boot()}else{$('gate').hidden=false;$('app').hidden=true}});
-async function boot(){const {data,error}=await db.from('dash_state').select('key,data,updated_at,src');if(error){toast('불러오기 실패 '+error.message);return}
- for(const r of data)S[r.key]=r;render();tab(localStorage.getItem('tab')||'today');
+setTimeout(()=>{  // 아래 함수·상수가 다 준비된 뒤에 시작
+if(location.hash==='#test'){fetch('_test.json').then(r=>r.json()).then(rows=>{for(const r of rows)S[r.key]=r;UID='test';$('gate').hidden=true;$('app').hidden=false;render();tab(new URLSearchParams(location.search).get('tab')||'today')})}else{if(LS.get('jh_S')){S=LS.get('jh_S');UID=LS.get('jh_uid');$('gate').hidden=true;$('app').hidden=false;render();tab(localStorage.getItem('tab')||'today');netBadge()}  // 저장본부터 바로 보여 준다(오프라인이어도)
+ db.auth.onAuthStateChange((ev,sess)=>{if(sess){UID=sess.user.id;$('gate').hidden=true;$('app').hidden=false;boot()}else if(navigator.onLine||!LS.get('jh_S')){$('gate').hidden=false;$('app').hidden=true}})}},0);
+async function boot(){let data,error;try{({data,error}=await db.from('dash_state').select('key,data,updated_at,src'))}catch(e){error=e}if(error){netBadge();if(navigator.onLine)toast('불러오기 실패 — 저장해 둔 화면을 보여 드려요');return}
+ for(const r of data)S[r.key]=r;render();tab(localStorage.getItem('tab')||'today');flush();
  db.channel('dash').on('postgres_changes',{event:'*',schema:'public',table:'dash_state',filter:'user_id=eq.'+UID},p=>{const r=p.new;if(!r||!r.key)return;if(S[r.key]&&r.src==='phone'&&S[r.key].updated_at>=r.updated_at)return;S[r.key]=r;render(r.key)}).subscribe(st=>{if(st!=='SUBSCRIBED'){$('conn').className='warn';$('conn').textContent='연결 중…'}else staleness()});
  setInterval(staleness,30000)}
-async function save(key,data){const row={user_id:UID,key,data,src:'phone',updated_at:new Date().toISOString()};S[key]={...row};render(key);const {error}=await db.from('dash_state').upsert(row);if(error)toast('저장 실패 '+error.message)}
-async function inbox(kind,payload){const {error}=await db.from('dash_inbox').insert({user_id:UID,kind,payload});toast(error?'보내기 실패':'보냈어요 — 맥이 켜져 있으면 곧 반영돼요')}
-function staleness(){const s=S.snapshot?.data;const st=$('stale'),c=$('conn');if(!s){st.hidden=false;st.textContent='맥에서 아직 올린 내용이 없어요';c.className='bad';c.textContent='맥 없음';hh();return}
+async function save(key,data){const row={user_id:UID,key,data,src:'phone',updated_at:new Date().toISOString()};S[key]={...row};render(key);let error;try{({error}=await db.from('dash_state').upsert(row))}catch(e){error=e}if(error){queue('row',row);toast('오프라인 — 저장해 뒀다가 연결되면 맥에 보내요')}}
+async function inbox(kind,payload){const x={user_id:UID,kind,payload};let error;try{({error}=await db.from('dash_inbox').insert(x))}catch(e){error=e}if(error){queue('inbox',x);toast('오프라인 — 연결되면 보낼게요')}else toast('보냈어요 — 맥이 켜져 있으면 곧 반영돼요')}
+// ---- 오프라인: 마지막 화면을 폰에 저장해 두고, 바꾼 건 모아 뒀다가 연결되면 보낸다 ----
+function cacheS(){if(UID&&UID!=='test'){LS.set('jh_S',S);LS.set('jh_uid',UID)}}
+const PEND=()=>LS.get('jh_pend')||{rows:{},inbox:[]};
+function queue(kind,x){const p=PEND();if(kind==='row')p.rows[x.key]=x;else p.inbox.push(x);LS.set('jh_pend',p);netBadge()}
+let FLUSHING=false;async function flush(){if(FLUSHING||!navigator.onLine||!UID||UID==='test')return;FLUSHING=true;const p=PEND(),n0=Object.keys(p.rows).length+p.inbox.length,left={rows:{},inbox:[]};
+ for(const k in p.rows){let e;try{({error:e}=await db.from('dash_state').upsert(p.rows[k]))}catch(x){e=x}if(e)left.rows[k]=p.rows[k]}
+ for(const x of p.inbox){let e;try{({error:e}=await db.from('dash_inbox').insert(x))}catch(y){e=y}if(e)left.inbox.push(x)}
+ LS.set('jh_pend',left);FLUSHING=false;netBadge();const n1=Object.keys(left.rows).length+left.inbox.length;if(n0&&!n1)toast('오프라인에서 바꾼 '+n0+'건을 맥에 보냈어요')}
+function netBadge(){const p=PEND(),n=Object.keys(p.rows).length+p.inbox.length;if(navigator.onLine)return staleness();
+ const c=$('conn'),st=$('stale'),at=S.snapshot?.data?.at||'';c.className='bad';c.textContent='오프라인'+(n?' · 보낼 것 '+n:'');
+ st.hidden=false;st.textContent=`인터넷이 없어서 마지막으로 받은 화면(${at.slice(5,16).replace('T',' ')})을 보여 드려요. 체크·메모·할 일은 저장해 뒀다가 연결되면 맥에 보내요.`;hh()}
+addEventListener('online',()=>{toast('인터넷이 연결됐어요');flush();if(UID&&UID!=='test')boot()});addEventListener('offline',()=>{netBadge();toast('오프라인이에요 — 저장해 둔 화면으로 계속 쓸 수 있어요')});
+function staleness(){if(!navigator.onLine)return netBadge();const s=S.snapshot?.data;const st=$('stale'),c=$('conn');if(!s){st.hidden=false;st.textContent='맥에서 아직 올린 내용이 없어요';c.className='bad';c.textContent='맥 없음';hh();return}
  const age=(Date.now()-new Date(s.at))/60000;c.className=age<3?'ok':age<90?'warn':'bad';c.textContent=age<3?'실시간':age<90?`맥 ${Math.round(age)}분 전`:'맥 꺼짐';
  st.hidden=age<90;st.textContent=`맥 마지막 갱신 ${s.at.slice(5,16).replace('T',' ')} — 맥이 꺼져 있거나 잠든 것 같아요. 할 일·현황표·메모는 그래도 저장돼요.`;hh()}
 // ---- 렌더 ----
@@ -298,5 +313,6 @@ function pcSize(id){const w=PL.wide||[];const i=w.indexOf(id);i<0?w.push(id):w.s
 function pcHide(id){PL.hidden=[...(PL.hidden||[]),id];savePL();applyPL();toast('숨겼어요 (맨 아래에서 복구)')}
 function pcShow(id){PL.hidden=(PL.hidden||[]).filter(x=>x!==id);savePL();applyPL()}
 applyPL();
+{const _r=render;render=function(k){_r(k);cacheS()}}  // 그릴 때마다 폰에 저장
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></html>
