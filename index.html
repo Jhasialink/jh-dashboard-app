@@ -189,7 +189,7 @@ button.sm,form.inline button.sm{background:var(--gold);color:#fff;border-radius:
   <div id="htl" class="snap"></div>
   <div id="hlist" class="snap"></div>
   <div class="card" data-id="todo"><h2>오늘 할 일 <span class="badge" id="todobadge">0</span><span class="cc"><button onclick="pcSize('todo')">⇔</button><button onclick="pcHide('todo')">×</button></span></h2><ul class="todo" id="todo"></ul>
-   <form class="inline" onsubmit="addTodo(event)"><input id="ti" placeholder="할 일 추가 (!!!높음 @내일 돼요)"><button class="sm">추가</button></form>
+   <form class="inline" onsubmit="addTodo(event)"><input id="ti" placeholder="할 일 추가 (!!!높음 @내일 돼요)"><button class="sm">추가</button></form><div id="tdone"></div>
    <div id="dday"></div></div>
   <div id="hflow" class="snap"></div>
   <div id="hweek" class="snap"></div>
@@ -290,7 +290,10 @@ function todoDone(t){const d=today();if(t.daily===true)return t.done===d;if(t.da
 function renderTodo(){const items=S.todo?.data||[];const d=today();let left=0,h='';items.forEach((t,i)=>{const done=todoDone(t);if(!t.daily&&t.done&&t.done!==d)return;if(!done)left++;
  const due=t.due?`<span class="pill ${t.due<d&&!done?'red':t.due===d?'':'gray'}">${t.due===d?'오늘':t.due.slice(5).replace('-','/')}</span>`:'';
  h+=`<li class="${done?'done':''}" data-i="${i}"><label><input type="checkbox" ${done?'checked':''} onchange="toggleTodo(${i})"><span onclick="event.preventDefault();todoSheet(${i})">${E(t.text)}</span></label>${due}${t.daily?`<span class="tag">${t.daily==='weekly'?'매주':'매일'}</span>`:''}<button class="x" onclick="delTodo(${i})">×</button></li>`});
- $('todo').innerHTML=h||'<li class=muted>할 일 없음</li>';$('todobadge').textContent=left;$('todobadge').className='badge'+(left?'':' zero');$('nb-today').textContent=left||''}
+ $('todo').innerHTML=h||'<li class=muted>할 일 없음</li>';$('todobadge').textContent=left;$('todobadge').className='badge'+(left?'':' zero');$('nb-today').textContent=left||'';
+ // 체크해서 화면에서 사라진 것(오늘 전에 끝낸, 매일 할 일 제외) 모아보기
+ const hid=items.map((t,i)=>({t,i})).filter(({t})=>!t.daily&&t.done&&t.done!==d).sort((a,b)=>(b.t.done||'').localeCompare(a.t.done||''));
+ $('tdone').innerHTML=hid.length?`<details class="trash"><summary class="muted">체크한 할 일 모아보기 ${hid.length}</summary><ul class="list">${hid.map(({t,i})=>`<li><span class="muted">${(t.done||'').slice(5).replace('-','/')}</span> ${E(t.text)} <button class="sm ghost" onclick="toggleTodo(${i})">되돌리기</button></li>`).join('')}</ul></details>`:''}
 // 할 일 고치기: 글자를 누르면 아래에서 올라오는 창 — 이름·마감 수정, 삭제
 function todoSheet(i){const t=(S.todo?.data||[])[i];if(!t)return;const w=document.createElement('div');w.className='tsh';
  w.innerHTML=`<div><b>할 일 고치기</b><input id="tsT" value="${E(t.text)}"><b>마감 (비우면 없음)</b><input id="tsD" type="date" value="${t.due||''}"><div class="tr"><button class="del">삭제</button><button class="no">닫기</button><button class="pri">저장</button></div></div>`;
