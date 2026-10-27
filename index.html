@@ -157,6 +157,9 @@ nav button i:empty{display:none}
 .gate{display:flex;align-items:center;justify-content:center;min-height:80vh}.gate form{background:var(--card);padding:26px 22px;border-radius:18px;width:min(360px,92vw);box-shadow:var(--sh);border:1px solid var(--line)}
 .gate input{width:100%;font:inherit;font-size:16px;padding:13px;border:1px solid var(--line);border-radius:12px;margin:6px 0;background:var(--soft);color:var(--ink)}
 .gate button{width:100%;margin-top:10px;background:var(--ink);color:var(--card);border:0;border-radius:12px;padding:13px;font:inherit;font-size:16px;font-weight:600}
+.tsh{position:fixed;inset:0;background:rgba(20,20,30,.35);z-index:30;display:flex;align-items:flex-end;justify-content:center}.tsh>div{background:var(--card);width:100%;max-width:520px;border-radius:18px 18px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom));box-shadow:var(--sh2)}
+.tsh b{display:block;font-size:13px;color:var(--mute);margin:0 0 8px}.tsh input{width:100%;box-sizing:border-box;padding:12px 13px;border:1px solid var(--line);border-radius:12px;font:inherit;font-size:16px;background:var(--soft);color:var(--ink);margin:0 0 10px}
+.tsh .tr{display:flex;gap:8px}.tsh .tr button{flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--card);font:inherit;font-size:15px;color:var(--ink)}.tsh .tr .pri{background:var(--gold);border-color:var(--gold);color:#fff}.tsh .tr .del{color:var(--red);flex:0 0 auto}
 .toast{position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--card);padding:9px 15px;border-radius:12px;font-size:13.5px;display:none;z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.2);white-space:nowrap}
 .tab{display:none}.tab.on{display:block}.chip{display:none}details summary{cursor:pointer}
 #memo{min-height:150px;line-height:1.7}
@@ -228,6 +231,7 @@ function renderHList(s){const fresh=s.at&&(Date.now()-new Date(s.at))/6e4<15&&s.
  const L=$('hlist');L.querySelectorAll('.hcb input').forEach(c=>{const i=+(c.getAttribute('onchange')||'').match(/\d+/)?.[0];c.onchange=()=>{toggleTodo(i);c.closest('.hit').classList.toggle('hdone',c.checked)}});
  L.querySelectorAll('.hck').forEach(b=>{const id=(b.getAttribute('onclick')||'').match(/[0-9a-f]{10}/)?.[0];b.onclick=()=>{inbox('care_ok',id);b.closest('.hit').remove()}});
  L.querySelectorAll('.hask').forEach(b=>{b.onclick=()=>{ask(b.dataset.t);tab('chat')}});
+ L.querySelectorAll('.hit[data-todo] .ht').forEach(t=>{t.removeAttribute('ondblclick');t.onclick=()=>todoSheet(+t.closest('.hit').dataset.todo)});
  L.querySelectorAll('.ht[onclick]').forEach(t=>{const id=(t.getAttribute('onclick')||'').match(/'(\w+)'/)?.[1];t.onclick=()=>goCard(id)});
  const f=L.querySelector('form');if(f)f.onsubmit=e=>{e.preventDefault();$('ti').value=$('ht').value;$('ht').value='';addTodo(e);toast('할 일에 넣었어요')}}
 function goCard(id){const m={mailc:'mail',occ:'oc',collab:'collab',proj:'proj',todo:'todo'};const cid=m[id]||id;tab(cid==='proj'?'proj':cid==='todo'?'today':'more');const c=document.querySelector(`.card[data-id="${cid}"]`);if(c){c.classList.remove('fold');setTimeout(()=>c.scrollIntoView({behavior:'smooth',block:'start'}),60)}}
@@ -285,8 +289,15 @@ function render(k){const s=S.snapshot?.data||{};if(!k||k==='snapshot'){$('head')
 function todoDone(t){const d=today();if(t.daily===true)return t.done===d;if(t.daily==='weekly'){const n=new Date();const mon=new Date(n.getTime()-((n.getDay()+6)%7)*864e5);return (t.done||'')>=mon.toISOString().slice(0,10)}return !!t.done}
 function renderTodo(){const items=S.todo?.data||[];const d=today();let left=0,h='';items.forEach((t,i)=>{const done=todoDone(t);if(!t.daily&&t.done&&t.done!==d)return;if(!done)left++;
  const due=t.due?`<span class="pill ${t.due<d&&!done?'red':t.due===d?'':'gray'}">${t.due===d?'오늘':t.due.slice(5).replace('-','/')}</span>`:'';
- h+=`<li class="${done?'done':''}" data-i="${i}"><label><input type="checkbox" ${done?'checked':''} onchange="toggleTodo(${i})"><span>${E(t.text)}</span></label>${due}${t.daily?`<span class="tag">${t.daily==='weekly'?'매주':'매일'}</span>`:''}<button class="x" onclick="delTodo(${i})">×</button></li>`});
+ h+=`<li class="${done?'done':''}" data-i="${i}"><label><input type="checkbox" ${done?'checked':''} onchange="toggleTodo(${i})"><span onclick="event.preventDefault();todoSheet(${i})">${E(t.text)}</span></label>${due}${t.daily?`<span class="tag">${t.daily==='weekly'?'매주':'매일'}</span>`:''}<button class="x" onclick="delTodo(${i})">×</button></li>`});
  $('todo').innerHTML=h||'<li class=muted>할 일 없음</li>';$('todobadge').textContent=left;$('todobadge').className='badge'+(left?'':' zero');$('nb-today').textContent=left||''}
+// 할 일 고치기: 글자를 누르면 아래에서 올라오는 창 — 이름·마감 수정, 삭제
+function todoSheet(i){const t=(S.todo?.data||[])[i];if(!t)return;const w=document.createElement('div');w.className='tsh';
+ w.innerHTML=`<div><b>할 일 고치기</b><input id="tsT" value="${E(t.text)}"><b>마감 (비우면 없음)</b><input id="tsD" type="date" value="${t.due||''}"><div class="tr"><button class="del">삭제</button><button class="no">닫기</button><button class="pri">저장</button></div></div>`;
+ const close=()=>w.remove();w.onclick=e=>{if(e.target===w)close()};w.querySelector('.no').onclick=close;
+ w.querySelector('.del').onclick=()=>{close();delTodo(i)};
+ w.querySelector('.pri').onclick=()=>{const v=w.querySelector('#tsT').value.trim();if(!v)return;const items=(S.todo?.data||[]).map(x=>({...x}));items[i].text=v;items[i].due=w.querySelector('#tsD').value||null;close();save('todo',items);toast('고쳤어요')};
+ document.body.appendChild(w)}
 function toggleTodo(i){const items=[...(S.todo?.data||[])];const t=items[i];t.done=todoDone(t)?null:today();save('todo',items)}
 function delTodo(i){if(!confirm('지울까요?'))return;const items=[...(S.todo?.data||[])];items.splice(i,1);save('todo',items)}
 function addTodo(e){e.preventDefault();let text=$('ti').value.trim();if(!text)return;let prio=0,due='';const m=text.match(/(!{1,3})/);if(m){prio=m[1].length;text=text.replace(m[1],'')}
