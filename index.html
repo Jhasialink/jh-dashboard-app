@@ -54,7 +54,7 @@ h3{font-size:12px;font-weight:600;color:var(--mute);margin:14px 0 6px}
 @media (min-width:1100px){#t-more.on{column-count:3}.hflow{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* 오늘 할 것 한 목록(폰) */
 #hlist:empty{display:none}.hlist{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh);padding:14px 14px 12px;margin:0 0 12px}.hlist h2{margin:0 0 4px;font-size:15.5px;font-weight:550;display:flex;gap:8px;align-items:center}
-.hgrp{font-size:12px;font-weight:600;color:var(--mute);margin:12px 0 2px}.hgrp span{opacity:.8}.hgrp.r{color:var(--red)}.hgrp.a{color:#b7791f}
+.hgrp{font-size:12px;font-weight:600;color:var(--mute);margin:12px 0 2px}.hgrp span{opacity:.8}.hgrp.r{color:var(--red)}.hgrp.a{color:#b7791f}.hgrp.hempty{display:none}body.sorting .hgrp.hempty{display:block;padding:10px;border:1.5px dashed var(--line);border-radius:10px}
 .hit{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line2)}.hit:last-of-type{border-bottom:0}.hit.hdone .ht{color:var(--mute);text-decoration:line-through}
 .hcb{flex:0 0 22px;display:grid;place-items:center}#hlist.snap input[type=checkbox]{display:grid!important;appearance:none;-webkit-appearance:none;width:22px;height:22px;border:2px solid var(--line);border-radius:7px;margin:0;place-content:center}
 #hlist.snap input[type=checkbox]:checked{background:var(--gold);border-color:var(--gold)}#hlist.snap input[type=checkbox]:checked::after{content:"";width:6px;height:11px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
@@ -319,17 +319,21 @@ applyPL();
 {const _r=render;render=function(k){if(DRAGGING)return;_r(k);cacheS()}}
 // ---- 길게 눌러(0.35초) 끌어서 할 일 순서 바꾸기 (맥과 같음) ----
 var DRAGGING=false;
-function sortable(root,itemSel,{group=()=>'',onDrop}){if(!root)return;let t=null,it=null,sx=0,sy=0,lifted=false;const cancel=()=>{clearTimeout(t);t=null};
+function sortable(root,itemSel,{group=()=>'',ok=(to,el)=>group(to)===group(el),head,onDrop}){if(!root)return;let t=null,it=null,sx=0,sy=0,lifted=false;const cancel=()=>{clearTimeout(t);t=null};
  root.addEventListener('pointerdown',e=>{if(e.target.closest('input,button,a,textarea,form'))return;const el=e.target.closest(itemSel);if(!el||!root.contains(el))return;sx=e.clientX;sy=e.clientY;lifted=false;const pid=e.pointerId;
   t=setTimeout(()=>{it=el;lifted=true;DRAGGING=true;el.classList.add('lifting');document.body.classList.add('sorting');try{root.setPointerCapture(pid)}catch{}if(navigator.vibrate)navigator.vibrate(15)},350)});
- root.addEventListener('pointermove',e=>{if(!it){if(t&&Math.hypot(e.clientX-sx,e.clientY-sy)>8)cancel();return}e.preventDefault();const o=document.elementFromPoint(e.clientX,e.clientY)?.closest(itemSel);
-  if(!o||o===it||!root.contains(o)||group(o)!==group(it))return;const r=o.getBoundingClientRect();e.clientY<r.top+r.height/2?o.before(it):o.after(it)});
+ root.addEventListener('pointermove',e=>{if(!it){if(t&&Math.hypot(e.clientX-sx,e.clientY-sy)>8)cancel();return}e.preventDefault();const tg=document.elementFromPoint(e.clientX,e.clientY),h=head&&tg?.closest(head);if(h&&root.contains(h)&&ok(h,it))return h.after(it);const o=tg?.closest(itemSel);
+  if(!o||o===it||!root.contains(o)||!ok(o,it))return;const r=o.getBoundingClientRect();e.clientY<r.top+r.height/2?o.before(it):o.after(it)});
  const end=()=>{cancel();if(!it)return;const el=it;it=null;DRAGGING=false;el.classList.remove('lifting');document.body.classList.remove('sorting');onDrop(el)};
  root.addEventListener('pointerup',end);root.addEventListener('pointercancel',end);
  root.addEventListener('click',e=>{if(lifted){e.preventDefault();e.stopPropagation();lifted=false}},true);
  root.addEventListener('touchmove',e=>{if(it)e.preventDefault()},{passive:false});root.addEventListener('contextmenu',e=>{if(it||t)e.preventDefault()})}
-function todoOrder(idx){const items=[...(S.todo?.data||[])],slots=[...idx].sort((a,b)=>a-b),picked=idx.map(k=>items[k]);slots.forEach((p,j)=>items[p]=picked[j]);save('todo',items);toast('순서를 바꿨어요')}
+function todoOrder(idx,mv){const items=(S.todo?.data||[]).map(x=>({...x}));if(mv)regroup(items[mv[0]],mv[1]);const slots=[...idx].sort((a,b)=>a-b),picked=idx.map(k=>items[k]);slots.forEach((p,j)=>items[p]=picked[j]);save('todo',items);toast('순서를 바꿨어요')}
 sortable($('todo'),'li[data-i]',{onDrop:()=>todoOrder([...document.querySelectorAll('#todo li[data-i]')].map(l=>+l.dataset.i))});
-sortable($('hlist'),'.hit[data-todo]',{group:el=>el.dataset.g,onDrop:()=>todoOrder([...document.querySelectorAll('#hlist .hit[data-todo]')].map(h=>+h.dataset.todo))});  // 그릴 때마다 폰에 저장
+// 오늘 할 것: 다른 묶음(꼭 오늘·여유 있을 때)으로 옮기면 마감을 거기에 맞춘다 — 맥 todo_regroup과 같은 규칙
+function regroup(t,g){const d=today();if(g==='꼭 오늘'){t.due=d;delete t.later}else if(g==='여유 있을 때'){const n=new Date(Date.now()+864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);if((t.due||'9')<=n)t.due=null;t.prio=Math.min(t.prio||0,2);t.later=true}}
+const HDROP=['꼭 오늘','여유 있을 때'];
+sortable($('hlist'),'.hit[data-todo]',{group:el=>el.dataset.g,ok:(to,el)=>to.dataset.g===el.dataset.g||HDROP.includes(to.dataset.g),head:'.hgrp[data-g]',onDrop:el=>{let h=el.previousElementSibling;while(h&&!h.classList.contains('hgrp'))h=h.previousElementSibling;const g=h?.dataset.g,mv=g&&g!==el.dataset.g?[+el.dataset.todo,g]:null;
+ todoOrder([...document.querySelectorAll('#hlist .hit[data-todo]')].map(x=>+x.dataset.todo),mv);if(mv){el.dataset.g=g;toast(`'${g}'(으)로 옮겼어요`)}}});  // 그릴 때마다 폰에 저장
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></html>
