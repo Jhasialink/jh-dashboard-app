@@ -62,7 +62,7 @@ h3{font-size:12px;font-weight:600;color:var(--mute);margin:14px 0 6px}
 .hgrp.b{color:var(--gold);margin-top:18px;padding-top:10px;border-top:1px dashed var(--line)}.hgrp .hgh{display:block;font-weight:400;font-size:11.5px;color:var(--mute);margin-top:2px}.hgrp.k{margin-top:18px;padding-top:10px;border-top:1px solid var(--line)}
 .hsrc{font-size:11.5px;color:var(--mute);margin-left:5px;white-space:nowrap}.hit.hb{flex-wrap:wrap;row-gap:6px}.hit.hb .ht{flex:1 1 calc(100% - 40px)}.hit.hb .hadopt{margin-left:32px}.hit.hb .hdue{margin-left:32px}.hit.hb .hask:not(.hadopt ~ .hask):not(.hdue ~ .hask){margin-left:32px}.hit.hdone{opacity:.7}
 #hlist.snap button.hadopt,.todo button.hadopt{display:inline-block!important;flex:0 0 auto;border:0;background:var(--goldbg);color:var(--gold);border-radius:40px;padding:4px 10px;font:inherit;font-size:12px;white-space:nowrap}
-.todo .tsec{font-size:12px;font-weight:600;color:var(--gold);padding:12px 0 4px;border-top:1px dashed var(--line)}.todo .tsec small{font-weight:400;color:var(--mute);margin-left:4px}.todo .tsec.k{color:var(--mute);border-top-style:solid}
+.todo .tsec{font-size:12px;font-weight:600;color:var(--gold);padding:12px 0 4px;border-top:1px dashed var(--line)}.todo .tsec small{font-weight:400;color:var(--mute);margin-left:4px}.todo .tsec.k{color:var(--mute);border-top-style:solid}.todo .tsec.m{color:var(--mute);border-top:0;padding-top:8px}.todo .tsec:first-child{padding-top:2px}
 .ht{flex:1;min-width:0;font-size:14.5px;line-height:1.4}.ht small{display:block;font-size:12px;color:var(--mute);margin-top:1px}
 .hit .tag{flex:0 0 auto;font-size:10.5px;font-weight:600;border-radius:6px;padding:1px 6px;background:var(--line2);color:var(--mute)}.t-c{background:#f3e8ff!important;color:#7c3aed!important}.t-s{background:#e0f2fe!important;color:#0369a1!important}.t-l{background:var(--greenbg)!important;color:var(--green)!important}.t-a{background:var(--goldbg)!important;color:var(--gold)!important}
 .hdue{flex:0 0 auto;font-size:11.5px;color:var(--mute);font-weight:600}.hdue.r{color:var(--red)}.hdue.a{color:#b7791f}
@@ -299,8 +299,10 @@ function render(k){const s=S.snapshot?.data||{};if(!k||k==='snapshot'){$('head')
 function todoDone(t){const d=today();if(t.daily===true)return t.done===d;if(t.daily==='weekly'){const n=new Date();const mon=new Date(n.getTime()-((n.getDay()+6)%7)*864e5);return (t.done||'')>=mon.toISOString().slice(0,10)}return !!t.done}
 function renderTodo(){const items=S.todo?.data||[];const d=today();let left=0,h='';
  const vis=items.map((t,i)=>({t,i,done:todoDone(t)})).filter(({t,done})=>t.daily||!t.done||t.done===d);
- const sec=x=>x.done?2:x.t.by?1:0;vis.sort((a,b)=>sec(a)-sec(b));  // 내 할 일 → 비서 추천(Claude가 넣은 것) → 오늘 체크한 것
- let cur=0;vis.forEach(({t,i,done})=>{if(!done)left++;const c=sec({t,done});if(c!==cur&&c){h+=c===2?'<li class="tsec k">✓ 오늘 체크한 것</li>':'<li class="tsec">비서 추천<small>Claude가 넣은 것</small></li>'}cur=c;
+ // 내 할 일(놓친 것·꼭 오늘·여유 있을 때 — 맥과 같은 묶음) → 비서 추천(Claude가 넣은 것) → 오늘 체크한 것
+ const tmr=new Date(Date.now()+864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10),GN=['놓친 것','꼭 오늘','여유 있을 때','비서 추천','✓ 오늘 체크한 것'];
+ const sec=({t,done})=>done?4:t.by?3:t.due&&t.due<d?0:(t.daily||t.due===d||t.due===tmr||(t.prio||0)>=3)?1:2;vis.sort((a,b)=>sec(a)-sec(b));
+ let cur=-1;vis.forEach(({t,i,done})=>{if(!done)left++;const c=sec({t,done});if(c!==cur){h+=`<li class="tsec ${c===4?'k':c===3?'':'m'}">${GN[c]}${c===3?'<small>Claude가 넣은 것</small>':''}</li>`}cur=c;
  const due=t.due?`<span class="pill ${t.due<d&&!done?'red':t.due===d?'':'gray'}">${t.due===d?'오늘':t.due.slice(5).replace('-','/')}</span>`:'';
  h+=`<li class="${done?'done':''}" data-i="${i}"><label><input type="checkbox" ${done?'checked':''} onchange="toggleTodo(${i})"><span onclick="event.preventDefault();todoSheet(${i})">${E(t.text)}${t.by?`<small class="hsrc">· ${E(t.src||'Claude')}</small>`:''}</span></label>${t.by&&!done?`<button class="hadopt" onclick="adoptTodo(${i})">내 할 일로</button>`:''}${due}${t.daily?`<span class="tag">${t.daily==='weekly'?'매주':'매일'}</span>`:''}<button class="x" onclick="delTodo(${i})">×</button></li>`});
  $('todo').innerHTML=h||'<li class=muted>할 일 없음</li>';$('todobadge').textContent=left;$('todobadge').className='badge'+(left?'':' zero');$('nb-today').textContent=left||'';
