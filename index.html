@@ -59,7 +59,7 @@ h3{font-size:12px;font-weight:600;color:var(--mute);margin:14px 0 6px}
 .hcb{flex:0 0 22px;display:grid;place-items:center}#hlist.snap input[type=checkbox]{display:grid!important;appearance:none;-webkit-appearance:none;width:22px;height:22px;border:2px solid var(--line);border-radius:7px;margin:0;place-content:center}
 #hlist.snap input[type=checkbox]:checked{background:var(--gold);border-color:var(--gold)}#hlist.snap input[type=checkbox]:checked::after{content:"";width:6px;height:11px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
 #hlist.snap button.hck{display:block!important;width:22px;height:22px;border:2px solid var(--line);border-radius:7px;background:none;color:var(--mute);font-size:11px;padding:0}.hck0{width:6px;height:6px;border-radius:50%;background:var(--line)}
-.hgrp.b{color:var(--gold);margin-top:18px;padding-top:10px;border-top:1px dashed var(--line)}.hgrp .hgh{display:block;font-weight:400;font-size:11.5px;color:var(--mute);margin-top:2px}.hgrp.k{margin-top:18px;padding-top:10px;border-top:1px solid var(--line)}
+.hmail+#conn{margin-left:0!important}.hmail{margin-left:auto;margin-right:4px;border:1px solid var(--line);background:var(--card);color:var(--ink2);border-radius:40px;padding:4px 11px;font:inherit;font-size:12.5px}.hgrp.b{color:var(--gold);margin-top:18px;padding-top:10px;border-top:1px dashed var(--line)}.hgrp .hgh{display:block;font-weight:400;font-size:11.5px;color:var(--mute);margin-top:2px}.hgrp.k{margin-top:18px;padding-top:10px;border-top:1px solid var(--line)}
 .hsrc{font-size:11.5px;color:var(--mute);margin-left:5px;white-space:nowrap}.hit.hb{flex-wrap:wrap;row-gap:6px}.hit.hb .ht{flex:1 1 calc(100% - 40px)}.hit.hb .hadopt{margin-left:32px}.hit.hb .hdue{margin-left:32px}.hit.hb .hask:not(.hadopt ~ .hask):not(.hdue ~ .hask){margin-left:32px}.hit.hdone{opacity:.7}
 #hlist.snap button.hadopt,.todo button.hadopt{display:inline-block!important;flex:0 0 auto;border:0;background:var(--goldbg);color:var(--gold);border-radius:40px;padding:4px 10px;font:inherit;font-size:12px;white-space:nowrap}
 .todo .tsec{font-size:12px;font-weight:600;color:var(--gold);padding:12px 0 4px;border-top:1px dashed var(--line)}.todo .tsec small{font-weight:400;color:var(--mute);margin-left:4px}.todo .tsec.k{color:var(--mute);border-top-style:solid}.todo .tsec.m{color:var(--mute);border-top:0;padding-top:8px}.todo .tsec:first-child{padding-top:2px}
@@ -181,7 +181,7 @@ nav button i:empty{display:none}
 .care{background:var(--goldbg);border:0}.card h2{font-weight:550}.bhead{font-weight:500}.tile b{font-weight:500}
 button.sm,form.inline button.sm{background:var(--gold);color:#fff;border-radius:40px}button.ghost{background:none;color:var(--ink2)}.quick button{border-radius:40px}
 </style>
-<header id="hdr"><div class="htop"><h1>JH 업무 대시보드</h1><span id="conn">연결 중</span></div><span id="head"></span></header>
+<header id="hdr"><div class="htop"><h1>JH 업무 대시보드</h1><button class="hmail" onclick="goCard('mailc')" title="회사 메일 보기">✉ 메일</button><span id="conn">연결 중</span></div><span id="head"></span></header>
 <div id="stale" class="stale" hidden></div>
 <main>
 <div class="gate" id="gate"><form onsubmit="login(event)"><h3 style="margin:0 0 8px">JH 업무 대시보드</h3><p class="muted">학습 리포트 앱 원장 계정으로 로그인</p>
