@@ -59,6 +59,10 @@ h3{font-size:12px;font-weight:600;color:var(--mute);margin:14px 0 6px}
 .hcb{flex:0 0 22px;display:grid;place-items:center}#hlist.snap input[type=checkbox]{display:grid!important;appearance:none;-webkit-appearance:none;width:22px;height:22px;border:2px solid var(--line);border-radius:7px;margin:0;place-content:center}
 #hlist.snap input[type=checkbox]:checked{background:var(--gold);border-color:var(--gold)}#hlist.snap input[type=checkbox]:checked::after{content:"";width:6px;height:11px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
 #hlist.snap button.hck{display:block!important;width:22px;height:22px;border:2px solid var(--line);border-radius:7px;background:none;color:var(--mute);font-size:11px;padding:0}.hck0{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.hgrp.b{color:var(--gold);margin-top:18px;padding-top:10px;border-top:1px dashed var(--line)}.hgrp .hgh{display:block;font-weight:400;font-size:11.5px;color:var(--mute);margin-top:2px}.hgrp.k{margin-top:18px;padding-top:10px;border-top:1px solid var(--line)}
+.hsrc{font-size:11.5px;color:var(--mute);margin-left:5px;white-space:nowrap}.hit.hb{flex-wrap:wrap;row-gap:6px}.hit.hb .ht{flex:1 1 calc(100% - 40px)}.hit.hb .hadopt{margin-left:32px}.hit.hb .hdue{margin-left:32px}.hit.hb .hask:not(.hadopt ~ .hask):not(.hdue ~ .hask){margin-left:32px}.hit.hdone{opacity:.7}
+#hlist.snap button.hadopt,.todo button.hadopt{display:inline-block!important;flex:0 0 auto;border:0;background:var(--goldbg);color:var(--gold);border-radius:40px;padding:4px 10px;font:inherit;font-size:12px;white-space:nowrap}
+.todo .tsec{font-size:12px;font-weight:600;color:var(--gold);padding:12px 0 4px;border-top:1px dashed var(--line)}.todo .tsec small{font-weight:400;color:var(--mute);margin-left:4px}.todo .tsec.k{color:var(--mute);border-top-style:solid}
 .ht{flex:1;min-width:0;font-size:14.5px;line-height:1.4}.ht small{display:block;font-size:12px;color:var(--mute);margin-top:1px}
 .hit .tag{flex:0 0 auto;font-size:10.5px;font-weight:600;border-radius:6px;padding:1px 6px;background:var(--line2);color:var(--mute)}.t-c{background:#f3e8ff!important;color:#7c3aed!important}.t-s{background:#e0f2fe!important;color:#0369a1!important}.t-l{background:var(--greenbg)!important;color:var(--green)!important}.t-a{background:var(--goldbg)!important;color:var(--gold)!important}
 .hdue{flex:0 0 auto;font-size:11.5px;color:var(--mute);font-weight:600}.hdue.r{color:var(--red)}.hdue.a{color:#b7791f}
@@ -228,8 +232,14 @@ function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';cle
 function tab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.id==='t-'+t));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));localStorage.setItem('tab',t);window.scrollTo(0,0);hh();if(t==='chat')chatBottom()}
 // '오늘 할 것' 한 목록: 맥이 만든 목록에 폰 동작을 다시 단다
 function renderHList(s){const fresh=s.at&&(Date.now()-new Date(s.at))/6e4<15&&s.hlist;$('hlist').innerHTML=fresh?s.hlist:'';document.querySelector('.card[data-id=todo]').style.display=fresh?'none':'';if(!fresh)return;
- const L=$('hlist');L.querySelectorAll('.hcb input').forEach(c=>{const i=+(c.getAttribute('onchange')||'').match(/\d+/)?.[0];c.onchange=()=>{toggleTodo(i);c.closest('.hit').classList.toggle('hdone',c.checked)}});
- L.querySelectorAll('.hck').forEach(b=>{const id=(b.getAttribute('onclick')||'').match(/[0-9a-f]{10}/)?.[0];b.onclick=()=>{inbox('care_ok',id);b.closest('.hit').remove()}});
+ const L=$('hlist');L.querySelectorAll('.hcb input').forEach(c=>{const i=+(c.getAttribute('onchange')||'').match(/\d+/)?.[0];c.onchange=()=>{toggleTodo(i);const h=c.closest('.hit');h.classList.toggle('hdone',c.checked);
+  if(c.checked){let k=L.querySelector('.hgrp.k');if(!k){k=document.createElement('div');k.className='hgrp k';k.textContent='✓ 오늘 체크한 것';L.querySelector('form').before(k)}h.removeAttribute('data-todo');L.querySelector('form').before(h)}}});  // 체크하면 맨 아래 '오늘 체크한 것'으로
+ L.querySelectorAll('.hck').forEach(b=>{const id=(b.getAttribute('onclick')||'').match(/[0-9a-f]{10}/)?.[0];b.onclick=()=>{if(id)inbox('care_ok',id);b.closest('.hit').remove()}});
+ // 비서 추천 → 내 할 일로: Claude가 넣은 할 일은 표시만 떼고, 비서 제안은 새 할 일로, 비서 말은 맥에 '할 일로' 보냄
+ L.querySelectorAll('.hadopt').forEach(b=>{const a=b.getAttribute('onclick')||'',n=+a.match(/,(\d+)\)/)?.[1],id=a.match(/[0-9a-f]{10}/)?.[0],h=b.closest('.hit');b.onclick=()=>{
+  const items=(S.todo?.data||[]).map(x=>({...x}));if(a.includes("'adopt'")&&items[n]){['by','src','src_cli'].forEach(k=>delete items[n][k]);save('todo',items)}
+  else if(a.includes("'apply'")){items.push({text:h.querySelector('.ht').firstChild.nodeValue.trim(),daily:false,done:null,prio:0,due:''});save('todo',items)}else if(id)inbox('care_todo',id);
+  h.remove();toast('내 할 일로 옮겼어요')}});
  L.querySelectorAll('.hask').forEach(b=>{b.onclick=()=>{ask(b.dataset.t);tab('chat')}});
  L.querySelectorAll('.hit[data-todo] .ht').forEach(t=>{t.removeAttribute('ondblclick');t.onclick=()=>todoSheet(+t.closest('.hit').dataset.todo)});
  L.querySelectorAll('.ht[onclick]').forEach(t=>{const id=(t.getAttribute('onclick')||'').match(/'(\w+)'/)?.[1];t.onclick=()=>goCard(id)});
@@ -289,10 +299,10 @@ function render(k){const s=S.snapshot?.data||{};if(!k||k==='snapshot'){$('head')
 function todoDone(t){const d=today();if(t.daily===true)return t.done===d;if(t.daily==='weekly'){const n=new Date();const mon=new Date(n.getTime()-((n.getDay()+6)%7)*864e5);return (t.done||'')>=mon.toISOString().slice(0,10)}return !!t.done}
 function renderTodo(){const items=S.todo?.data||[];const d=today();let left=0,h='';
  const vis=items.map((t,i)=>({t,i,done:todoDone(t)})).filter(({t,done})=>t.daily||!t.done||t.done===d);
- vis.sort((a,b)=>a.done-b.done);  // 체크한 건 맨 아래로(안에서는 원래 순서 그대로)
- vis.forEach(({t,i,done})=>{if(!done)left++;
+ const sec=x=>x.done?2:x.t.by?1:0;vis.sort((a,b)=>sec(a)-sec(b));  // 내 할 일 → 비서 추천(Claude가 넣은 것) → 오늘 체크한 것
+ let cur=0;vis.forEach(({t,i,done})=>{if(!done)left++;const c=sec({t,done});if(c!==cur&&c){h+=c===2?'<li class="tsec k">✓ 오늘 체크한 것</li>':'<li class="tsec">비서 추천<small>Claude가 넣은 것</small></li>'}cur=c;
  const due=t.due?`<span class="pill ${t.due<d&&!done?'red':t.due===d?'':'gray'}">${t.due===d?'오늘':t.due.slice(5).replace('-','/')}</span>`:'';
- h+=`<li class="${done?'done':''}" data-i="${i}"><label><input type="checkbox" ${done?'checked':''} onchange="toggleTodo(${i})"><span onclick="event.preventDefault();todoSheet(${i})">${E(t.text)}</span></label>${due}${t.daily?`<span class="tag">${t.daily==='weekly'?'매주':'매일'}</span>`:''}<button class="x" onclick="delTodo(${i})">×</button></li>`});
+ h+=`<li class="${done?'done':''}" data-i="${i}"><label><input type="checkbox" ${done?'checked':''} onchange="toggleTodo(${i})"><span onclick="event.preventDefault();todoSheet(${i})">${E(t.text)}${t.by?`<small class="hsrc">· ${E(t.src||'Claude')}</small>`:''}</span></label>${t.by&&!done?`<button class="hadopt" onclick="adoptTodo(${i})">내 할 일로</button>`:''}${due}${t.daily?`<span class="tag">${t.daily==='weekly'?'매주':'매일'}</span>`:''}<button class="x" onclick="delTodo(${i})">×</button></li>`});
  $('todo').innerHTML=h||'<li class=muted>할 일 없음</li>';$('todobadge').textContent=left;$('todobadge').className='badge'+(left?'':' zero');$('nb-today').textContent=left||'';
  // 체크해서 화면에서 사라진 것(오늘 전에 끝낸, 매일 할 일 제외) 모아보기
  const hid=items.map((t,i)=>({t,i})).filter(({t})=>!t.daily&&t.done&&t.done!==d).sort((a,b)=>(b.t.done||'').localeCompare(a.t.done||''));
@@ -304,6 +314,7 @@ function todoSheet(i){const t=(S.todo?.data||[])[i];if(!t)return;const w=documen
  w.querySelector('.del').onclick=()=>{close();delTodo(i)};
  w.querySelector('.pri').onclick=()=>{const v=w.querySelector('#tsT').value.trim();if(!v)return;const items=(S.todo?.data||[]).map(x=>({...x}));items[i].text=v;items[i].due=w.querySelector('#tsD').value||null;close();save('todo',items);toast('고쳤어요')};
  document.body.appendChild(w)}
+function adoptTodo(i){const items=(S.todo?.data||[]).map(x=>({...x}));['by','src','src_cli'].forEach(k=>delete items[i][k]);save('todo',items);toast('내 할 일로 옮겼어요')}
 function toggleTodo(i){const items=[...(S.todo?.data||[])];const t=items[i];t.done=todoDone(t)?null:today();save('todo',items)}
 function delTodo(i){if(!confirm('지울까요?'))return;const items=[...(S.todo?.data||[])];items.splice(i,1);save('todo',items)}
 function addTodo(e){e.preventDefault();let text=$('ti').value.trim();if(!text)return;let prio=0,due='';const m=text.match(/(!{1,3})/);if(m){prio=m[1].length;text=text.replace(m[1],'')}
@@ -348,7 +359,7 @@ function sortable(root,itemSel,{group=()=>'',ok=(to,el)=>group(to)===group(el),h
 function todoOrder(idx,mv){const items=(S.todo?.data||[]).map(x=>({...x}));if(mv)regroup(items[mv[0]],mv[1]);const slots=[...idx].sort((a,b)=>a-b),picked=idx.map(k=>items[k]);slots.forEach((p,j)=>items[p]=picked[j]);save('todo',items);toast('순서를 바꿨어요')}
 sortable($('todo'),'li[data-i]',{onDrop:()=>todoOrder([...document.querySelectorAll('#todo li[data-i]')].map(l=>+l.dataset.i))});
 // 오늘 할 것: 다른 묶음(꼭 오늘·여유 있을 때)으로 옮기면 마감을 거기에 맞춘다 — 맥 todo_regroup과 같은 규칙
-function regroup(t,g){const d=today();if(g==='꼭 오늘'){t.due=d;delete t.later}else if(g==='여유 있을 때'){const n=new Date(Date.now()+864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);if((t.due||'9')<=n)t.due=null;t.prio=Math.min(t.prio||0,2);t.later=true}}
+function regroup(t,g){const d=today();if(g==='꼭 오늘'||g==='여유 있을 때')['by','src','src_cli'].forEach(k=>delete t[k]);if(g==='꼭 오늘'){t.due=d;delete t.later}else if(g==='여유 있을 때'){const n=new Date(Date.now()+864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);if((t.due||'9')<=n)t.due=null;t.prio=Math.min(t.prio||0,2);t.later=true}}
 const HDROP=['꼭 오늘','여유 있을 때'];
 sortable($('hlist'),'.hit[data-todo]',{group:el=>el.dataset.g,ok:(to,el)=>to.dataset.g===el.dataset.g||HDROP.includes(to.dataset.g),head:'.hgrp[data-g]',onDrop:el=>{let h=el.previousElementSibling;while(h&&!h.classList.contains('hgrp'))h=h.previousElementSibling;const g=h?.dataset.g,mv=g&&g!==el.dataset.g?[+el.dataset.todo,g]:null;
  todoOrder([...document.querySelectorAll('#hlist .hit[data-todo]')].map(x=>+x.dataset.todo),mv);if(mv){el.dataset.g=g;toast(`'${g}'(으)로 옮겼어요`)}}});  // 그릴 때마다 폰에 저장
