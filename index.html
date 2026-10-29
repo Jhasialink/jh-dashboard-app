@@ -241,7 +241,7 @@ function renderHList(s){const fresh=s.at&&(Date.now()-new Date(s.at))/6e4<15&&s.
   else if(a.includes("'apply'")){items.push({text:h.querySelector('.ht').firstChild.nodeValue.trim(),daily:false,done:null,prio:0,due:''});save('todo',items)}else if(id)inbox('care_todo',id);
   h.remove();toast('내 할 일로 옮겼어요')}});
  L.querySelectorAll('.hask').forEach(b=>{b.onclick=()=>{ask(b.dataset.t);tab('chat')}});
- L.querySelectorAll('.hit[data-todo] .ht').forEach(t=>{t.removeAttribute('ondblclick');t.onclick=()=>todoSheet(+t.closest('.hit').dataset.todo)});
+ L.querySelectorAll('.hit[data-todo] .ht').forEach(t=>{t.removeAttribute('ondblclick');t.title='눌러서 고치기';t.onclick=()=>todoSheet(+t.closest('.hit').dataset.todo)});
  L.querySelectorAll('.ht[onclick]').forEach(t=>{const id=(t.getAttribute('onclick')||'').match(/'(\w+)'/)?.[1];t.onclick=()=>goCard(id)});
  const f=L.querySelector('form');if(f)f.onsubmit=e=>{e.preventDefault();$('ti').value=$('ht').value;$('ht').value='';addTodo(e);toast('할 일에 넣었어요')}}
 function goCard(id){const m={mailc:'mail',occ:'oc',collab:'collab',proj:'proj',todo:'todo'};const cid=m[id]||id;tab(cid==='proj'?'proj':cid==='todo'?'today':'more');const c=document.querySelector(`.card[data-id="${cid}"]`);if(c){c.classList.remove('fold');setTimeout(()=>c.scrollIntoView({behavior:'smooth',block:'start'}),60)}}
@@ -347,10 +347,10 @@ function pcHide(id){PL.hidden=[...(PL.hidden||[]),id];savePL();applyPL();toast('
 function pcShow(id){PL.hidden=(PL.hidden||[]).filter(x=>x!==id);savePL();applyPL()}
 applyPL();
 {const _r=render;render=function(k){if(DRAGGING)return;_r(k);cacheS()}}
-// ---- 길게 눌러(0.35초) 끌어서 할 일 순서 바꾸기 (맥과 같음) ----
+// ---- 길게 눌러(0.35초) 끌어서 할 일 순서 바꾸기 (맥과 같음). 글자(.ht)·label은 눌러서 바로 고치는 자리라 순서 바꾸기 시작점에서 빼서, 0.35초 넘게 눌러도 고치기가 막히지 않게 함(2026-10-29) ----
 var DRAGGING=false;
 function sortable(root,itemSel,{group=()=>'',ok=(to,el)=>group(to)===group(el),head,onDrop}){if(!root)return;let t=null,it=null,sx=0,sy=0,lifted=false;const cancel=()=>{clearTimeout(t);t=null};
- root.addEventListener('pointerdown',e=>{if(e.target.closest('input,button,a,textarea,form'))return;const el=e.target.closest(itemSel);if(!el||!root.contains(el))return;sx=e.clientX;sy=e.clientY;lifted=false;const pid=e.pointerId;
+ root.addEventListener('pointerdown',e=>{if(e.target.closest('input,button,a,textarea,form,label,.ht'))return;const el=e.target.closest(itemSel);if(!el||!root.contains(el))return;sx=e.clientX;sy=e.clientY;lifted=false;const pid=e.pointerId;
   t=setTimeout(()=>{it=el;lifted=true;DRAGGING=true;el.classList.add('lifting');document.body.classList.add('sorting');try{root.setPointerCapture(pid)}catch{}if(navigator.vibrate)navigator.vibrate(15)},350)});
  root.addEventListener('pointermove',e=>{if(!it){if(t&&Math.hypot(e.clientX-sx,e.clientY-sy)>8)cancel();return}e.preventDefault();const tg=document.elementFromPoint(e.clientX,e.clientY),h=head&&tg?.closest(head);if(h&&root.contains(h)&&ok(h,it))return h.after(it);const o=tg?.closest(itemSel);
   if(!o||o===it||!root.contains(o)||!ok(o,it))return;const r=o.getBoundingClientRect();e.clientY<r.top+r.height/2?o.before(it):o.after(it)});
