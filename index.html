@@ -67,6 +67,8 @@ h3{font-size:12px;font-weight:600;color:var(--mute);margin:14px 0 6px}
 .hit .tag{flex:0 0 auto;font-size:10.5px;font-weight:600;border-radius:6px;padding:1px 6px;background:var(--line2);color:var(--mute)}.t-c{background:#f3e8ff!important;color:#7c3aed!important}.t-s{background:#e0f2fe!important;color:#0369a1!important}.t-l{background:var(--greenbg)!important;color:var(--green)!important}.t-a{background:var(--goldbg)!important;color:var(--gold)!important}
 .hdue{flex:0 0 auto;font-size:11.5px;color:var(--mute);font-weight:600}.hdue.r{color:var(--red)}.hdue.a{color:#b7791f}
 #hlist.snap button.hask{display:inline-block!important;border:1px solid var(--line);background:var(--card);color:var(--ink2);border-radius:40px;padding:3px 9px;font:inherit;font-size:11.5px;flex:0 0 auto}
+#hlist.snap .hacts{display:contents}#hlist.snap .hacts button.hask{display:none!important}.ht .hm{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+html:not(.hmore-on) .hit.hmore{display:none}#hlist.snap .hmorebtn{display:block!important;margin:6px 0 0 32px;padding:6px 0;border:0;background:none;color:var(--gold);font:inherit;font-size:13px}html.hmore-on .hmorebtn .m1,html:not(.hmore-on) .hmorebtn .m2{display:none}
 #hlist.snap form{display:flex!important;margin-top:10px}#hlist.snap form input{display:block!important;flex:1;padding:11px 13px;border:1px solid var(--line);border-radius:12px;font:inherit;font-size:15px;background:var(--soft);color:var(--ink)}
 .hk{display:none}
 @media (max-width:420px){.hit .tag{display:none}}
@@ -231,7 +233,8 @@ const db=supabase.createClient(JH_CFG.url,JH_CFG.key);let UID=null,S={};const to
 function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2500)}
 function tab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.id==='t-'+t));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));localStorage.setItem('tab',t);window.scrollTo(0,0);hh();if(t==='chat')chatBottom()}
 // '오늘 할 것' 한 목록: 맥이 만든 목록에 폰 동작을 다시 단다
-function renderHList(s){const fresh=s.at&&(Date.now()-new Date(s.at))/6e4<15&&s.hlist;$('hlist').innerHTML=fresh?s.hlist:'';document.querySelector('.card[data-id=todo]').style.display=fresh?'none':'';if(!fresh)return;
+function renderHList(s){const fresh=s.at&&(Date.now()-new Date(s.at))/6e4<15&&s.hlist;$('hlist').innerHTML=fresh?s.hlist:'';document.querySelector('.card[data-id=todo]').style.display=fresh?'none':'';$('care').style.display=fresh?'none':'';if(!fresh)return;$('nb-today').textContent=$('hlist').querySelector('h2 .badge')?.textContent||'';  // 비서 케어는 '오늘 할 것'에 다 들어 있다
+
  const L=$('hlist');L.querySelectorAll('.hcb input').forEach(c=>{const i=+(c.getAttribute('onchange')||'').match(/\d+/)?.[0];c.onchange=()=>{toggleTodo(i);const h=c.closest('.hit');h.classList.toggle('hdone',c.checked);
   if(c.checked){let k=L.querySelector('.hgrp.k');if(!k){k=document.createElement('div');k.className='hgrp k';k.textContent='✓ 오늘 체크한 것';L.querySelector('form').before(k)}h.removeAttribute('data-todo');L.querySelector('form').before(h)}}});  // 체크하면 맨 아래 '오늘 체크한 것'으로
  L.querySelectorAll('.hck').forEach(b=>{const id=(b.getAttribute('onclick')||'').match(/[0-9a-f]{10}/)?.[0];b.onclick=()=>{if(id)inbox('care_ok',id);b.closest('.hit').remove()}});
@@ -245,6 +248,7 @@ function renderHList(s){const fresh=s.at&&(Date.now()-new Date(s.at))/6e4<15&&s.
  L.querySelectorAll('.hed .x').forEach(b=>{b.onclick=()=>todoSheet(+b.closest('.hit').dataset.todo)});  // ✎·📅·× 버튼: 맥 전용 함수(edit/tdue/api) 대신 같은 고치기 창으로
  L.querySelectorAll('.ht[onclick]').forEach(t=>{const id=(t.getAttribute('onclick')||'').match(/'(\w+)'/)?.[1];t.onclick=()=>goCard(id)});
  const f=L.querySelector('form');if(f)f.onsubmit=e=>{e.preventDefault();$('ti').value=$('ht').value;$('ht').value='';addTodo(e);toast('할 일에 넣었어요')}}
+function hMore(on){on=on??!document.documentElement.classList.contains('hmore-on');document.documentElement.classList.toggle('hmore-on',on);try{localStorage.setItem('hmore',on?'1':'')}catch{}}try{if(localStorage.getItem('hmore'))document.documentElement.classList.add('hmore-on')}catch{}
 function goCard(id){const m={mailc:'mail',occ:'oc',collab:'collab',proj:'proj',todo:'todo'};const cid=m[id]||id;tab(cid==='proj'?'proj':cid==='todo'?'today':'more');const c=document.querySelector(`.card[data-id="${cid}"]`);if(c){c.classList.remove('fold');setTimeout(()=>c.scrollIntoView({behavior:'smooth',block:'start'}),60)}}
 // 비서 탭의 대화방: 비서 + 맥에서 고른 코드 세션(맥이 1분마다·바뀔 때 올림)
 let PROOM=localStorage.getItem('proom')||'';
@@ -306,7 +310,7 @@ function renderTodo(){const items=S.todo?.data||[];const d=today();let left=0,h=
  let cur=-1;vis.forEach(({t,i,done})=>{if(!done&&!t.by)left++;const c=sec({t,done});if(c!==cur){h+=`<li class="tsec ${c===4?'k':c===3?'':'m'}">${GN[c]}${c===3?'<small>Claude가 넣은 것</small>':''}</li>`}cur=c;
  const due=t.due?`<span class="pill ${t.due<d&&!done?'red':t.due===d?'':'gray'}">${t.due===d?'오늘':t.due.slice(5).replace('-','/')}</span>`:'';
  h+=`<li class="${done?'done':''}" data-i="${i}"><label><input type="checkbox" ${done?'checked':''} onchange="toggleTodo(${i})"><span onclick="event.preventDefault();todoSheet(${i})">${E(t.text)}${t.by?`<small class="hsrc">· ${E(t.src||'Claude')}</small>`:''}</span></label>${t.by&&!done?`<button class="hadopt" onclick="adoptTodo(${i})">내 할 일로</button>`:''}${due}${t.daily?`<span class="tag">${t.daily==='weekly'?'매주':'매일'}</span>`:''}<button class="x" onclick="event.preventDefault();todoSheet(${i})" title="고치기">✎</button><button class="x" onclick="delTodo(${i})">×</button></li>`});
- $('todo').innerHTML=h||'<li class=muted>할 일 없음</li>';$('todobadge').textContent=left;$('todobadge').className='badge'+(left?'':' zero');$('nb-today').textContent=left||'';
+ $('todo').innerHTML=h||'<li class=muted>할 일 없음</li>';$('todobadge').textContent=left;$('todobadge').className='badge'+(left?'':' zero');$('nb-today').textContent=(document.querySelector('#hlist h2 .badge')?.textContent||left)||'';
  // 체크해서 화면에서 사라진 것(오늘 전에 끝낸, 매일 할 일 제외) 모아보기
  const hid=items.map((t,i)=>({t,i})).filter(({t})=>!t.daily&&t.done&&t.done!==d).sort((a,b)=>(b.t.done||'').localeCompare(a.t.done||''));
  $('tdone').innerHTML=hid.length?`<details class="trash"><summary class="muted">체크한 할 일 모아보기 ${hid.length}</summary><ul class="list">${hid.map(({t,i})=>`<li><span class="muted">${(t.done||'').slice(5).replace('-','/')}</span> ${E(t.text)} <button class="sm ghost" onclick="toggleTodo(${i})">되돌리기</button></li>`).join('')}</ul></details>`:''}
