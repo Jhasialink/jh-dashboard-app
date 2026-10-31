@@ -80,7 +80,7 @@ html:not(.hmore-on) .hit.hmore{display:none}#hlist.snap .hmorebtn{display:block!
 #oc table.oc:has(th:nth-child(5)) td{display:inline;padding:0;border:0;white-space:normal;font-size:13px}#oc table.oc:has(th:nth-child(5)) td:first-child{flex:1 0 100%;font-size:14px}#oc table.oc:has(th:nth-child(5)) td:empty{display:none}
 #oc table.oc:has(th:nth-child(5)) td:nth-child(2)::before{content:"담당 ";color:var(--mute)}#oc table.oc:has(th:nth-child(5)) td:nth-child(3)::before{content:"시간 ";color:var(--mute)}#oc table.oc:has(th:nth-child(5)) td:nth-child(4)::before{content:"반 ";color:var(--mute)}#oc table.oc:has(th:nth-child(5)) td:nth-child(5)::before{content:"출석 ";color:var(--mute)}
 .asec{font-size:12.5px;color:var(--mute);margin:10px 0 2px}.oc.one{width:100%;table-layout:fixed}.oc.one td{padding:9px 0;width:100%;white-space:normal;max-width:100%}.oc.one .row{gap:8px;flex-wrap:nowrap;align-items:baseline}.oc.one .row b{flex:1 1 auto;min-width:0}.oc.one .row a,.oc.one .row .muted{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%}.oc.one .row a{text-align:right}.oc.one .muted{word-break:break-word}
-.hpin{margin-right:3px}.hhint{font-size:11.5px;color:var(--mute);margin:0 0 4px}.tsh .vbody{max-height:65vh;overflow:auto;margin-bottom:12px}.tsh .grp{display:flex;gap:8px;margin:0 0 12px}.tsh .grp button{flex:1;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--card);font:inherit;font-size:14px;color:var(--ink)}.tsh .grp button.on{background:var(--goldbg);border-color:var(--gold);color:var(--gold)}
+.hpin{margin-right:3px}.hhint{font-size:11.5px;color:var(--mute);margin:0 0 4px}.tsh .vbody{max-height:65vh;overflow:auto;margin-bottom:12px}.tsh .grp.col{flex-direction:column}.tsh .grp.col button{text-align:left}.tsh textarea#dfT{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--line);border-radius:12px;font:inherit;font-size:14px;background:var(--soft);color:var(--ink);margin:0 0 10px;max-height:50vh}.hit[data-k]{position:relative;touch-action:pan-y;transition:transform .18s}.tsh .tr .ask{flex:1.4}.tsh .grp{display:flex;gap:8px;margin:0 0 12px}.tsh .grp button{flex:1;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--card);font:inherit;font-size:14px;color:var(--ink)}.tsh .grp button.on{background:var(--goldbg);border-color:var(--gold);color:var(--gold)}
 #hlist.snap form{display:flex!important;margin-top:10px}#hlist.snap form input{display:block!important;flex:1;padding:11px 13px;border:1px solid var(--line);border-radius:12px;font:inherit;font-size:15px;background:var(--soft);color:var(--ink)}
 .hk{display:none}
 @media (max-width:420px){.hit .tag{display:none}}
@@ -282,13 +282,32 @@ function renderHList(s){const fresh=s.at&&(Date.now()-new Date(s.at))/6e4<15&&s.
   h.remove();toast('내 할 일로 옮겼어요')}});
  L.querySelectorAll('.hask').forEach(b=>{b.onclick=()=>{ask(b.dataset.t);tab('chat')}});
  // 맥의 ✎·📅·× 버튼은 폰에선 숨김(.snap .x) — 대신 옆으로 밀면 나오는 버튼·고치기 창으로 같은 일을 한다
- L.querySelectorAll('.ht[onclick]').forEach(t=>{const id=(t.getAttribute('onclick')||'').match(/'(\w+)'/)?.[1];t.onclick=()=>goCard(id)});
+ L.querySelectorAll('.ht[onclick]').forEach(t=>{const id=(t.getAttribute('onclick')||'').match(/'(\w+)'/)?.[1],h=t.closest('.hit');if(h?.dataset.k)h.dataset.go=id;t.onclick=()=>h?.dataset.k?alertSheet(h):goCard(id)});
  const f=L.querySelector('form');if(f){f.onsubmit=e=>{e.preventDefault();$('ti').value=$('ht').value;$('ht').value='';addTodo(e);toast('할 일에 넣었어요')};f.insertAdjacentHTML('afterend',QCH('ht'))}}
 // 한 줄에 폰 동작 달기: 체크(맨 아래 '체크한 것'으로 / 풀면 제자리 표시), 글자 누르면 고치기 창
 function bindRow(h){const L=$('hlist'),c=h.querySelector('.hcb input');
  if(c)c.onchange=()=>{const j=TI(+h.dataset.todo,h.dataset.t);if(j<0){c.checked=!c.checked;return gone()}toggleTodo(j);h.classList.toggle('hdone',c.checked);hBadge(c.checked?-1:1);
   if(c.checked){let k=L.querySelector('.hgrp.k');if(!k){k=document.createElement('div');k.className='hgrp k';k.textContent='✓ 오늘 체크한 것';L.querySelector('form').before(k)}L.querySelector('form').before(h)}};
  const t=h.querySelector('.ht');if(t){t.removeAttribute('ondblclick');t.onclick=()=>{if(h.classList.contains('hdone'))return;const [i,x]=rk(h);todoSheet(i,x)}}}
+// ---- 자동 알림 줄(답장 초안·출석 미기록·일정·코워크) — 할 일이 아니라서 조작이 하나도 없던 것(2026-11-01 실장님 지적) ----
+// 누르면 고르는 창, 옆으로 밀면 버튼: 초안은 보기·고치기 / 안 보냄(삭제), 다른 알림은 할 일로 바꿔 고치기 / 오늘은 안 보기
+function alertActs(h){const f=h.dataset.f,t=h.dataset.t;return f?[['✎<span>초안</span>','',()=>draftSheet(f)],['🗑<span>삭제</span>','d',()=>alertDraftDel(h)]]:[['✎<span>할 일로</span>','',()=>alertTodo(h)],['🙈<span>오늘 숨김</span>','d',()=>alertHide(h)]]}
+function alertSheet(h){const f=h.dataset.f,acts=f?[['✎ 초안 보기·고치기',()=>draftSheet(f)],['🗑 안 보냄 · 삭제(휴지통)',()=>alertDraftDel(h)]]:[['✎ 할 일로 바꿔서 고치기',()=>alertTodo(h)],['🙈 오늘은 안 보기',()=>alertHide(h)]];
+ if(h.dataset.go)acts.push(['↗ 관련 화면 열기',()=>goCard(h.dataset.go)]);const w=document.createElement('div');w.className='tsh';
+ w.innerHTML=`<div><b>${E(h.dataset.t)}</b><div class="grp col">${acts.map(([l],k)=>`<button data-k="${k}">${l}</button>`).join('')}</div><div class="tr"><button class="no">닫기</button></div></div>`;
+ const close=()=>w.remove();w.onclick=e=>{if(e.target===w)close()};w.querySelector('.no').onclick=close;w.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{close();acts[+b.dataset.k][1]()});document.body.appendChild(w)}
+function hPull(h){const p=h.parentNode,n=h.nextSibling;h.remove();hBadge(-1);return ()=>{if(p&&document.contains(p)){p.insertBefore(h,n?.parentNode===p?n:null);hBadge(1)}}}  // 줄을 빼고, 되돌리기용 함수를 돌려준다
+function alertHide(h){const t=h.dataset.t,back=hPull(h);inbox('home',JSON.stringify({op:'home_hide',text:t}));toast('오늘은 안 보이게 했어요',()=>{back();inbox('home',JSON.stringify({op:'home_unhide',text:t}))})}
+function alertTodo(h){const t=h.dataset.t,clean=t.replace(/^(마감 지남|오늘 아직 안 함|급함|오늘 마감) · /,''),back=hPull(h);inbox('home',JSON.stringify({op:'home_hide',text:t}));
+ const items=(S.todo?.data||[]).map(x=>({...x}));let j=items.findIndex(x=>x.text===clean&&!x.done);if(j<0){items.push({text:clean,daily:false,done:null,prio:0,due:today()});j=items.length-1;save('todo',items);hAdd(j)}
+ todoSheet(j,clean);toast('내 할 일로 바꿨어요 — 이름·마감을 고쳐 보세요',()=>{back();const k=TI(j,clean);if(k>=0){const c=(S.todo?.data||[]).map(x=>({...x}));c.splice(k,1);save('todo',c)}document.querySelector('.tsh')?.remove();inbox('home',JSON.stringify({op:'home_unhide',text:t}))})}
+function alertDraftDel(h){const f=h.dataset.f,back=hPull(h);inbox('home',JSON.stringify({op:'draft_del',i:f}));toast('초안을 휴지통으로 보냈어요(답장 안 함)',()=>{back();inbox('home',JSON.stringify({op:'draft_restore',i:f}))})}
+function draftSheet(f){const t=S.snapshot?.data?.drafts?.[f];if(t==null)return toast('그 초안이 없어요 — 이미 보냈거나 지웠어요');const w=document.createElement('div');w.className='tsh';
+ w.innerHTML=`<div><b>답장 초안 고치기</b><textarea id="dfT" rows="12">${E(t)}</textarea><div class="tr"><button class="del">삭제</button><button class="no">닫기</button><button class="ask">비서에게 보내 달라기</button><button class="pri">저장</button></div></div>`;
+ const close=()=>w.remove(),txt=()=>w.querySelector('#dfT').value;w.onclick=e=>{if(e.target===w)close()};w.querySelector('.no').onclick=close;
+ w.querySelector('.pri').onclick=()=>{inbox('home',JSON.stringify({op:'draft_save',i:f,text:txt()}));S.snapshot.data.drafts[f]=txt();close();toast('초안을 고쳤어요 — 맥에 저장돼요')};
+ w.querySelector('.ask').onclick=()=>{inbox('home',JSON.stringify({op:'draft_save',i:f,text:txt()}));S.snapshot.data.drafts[f]=txt();close();ask(`jh-mail/drafts/${f} 초안을 검토하고 보내줘`)};
+ w.querySelector('.del').onclick=()=>{close();const h=document.querySelector(`#hlist .hit[data-f="${CSS.escape(f)}"]`);if(h)alertDraftDel(h);else inbox('home',JSON.stringify({op:'draft_del',i:f}))};document.body.appendChild(w)}
 // 폰에서 넣은 할 일은 맥이 다시 보내기 전에도 '오늘 할 것'에 바로 보이게(맞는 묶음 끝에)
 function hAdd(j){const L=$('hlist'),t=S.todo?.data?.[j];if(!L.firstChild||!t)return;const d=today(),tmr=new Date(Date.now()+864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
  const g=t.due&&t.due<d?'놓친 것':(t.daily||t.due===d||t.due===tmr||(t.prio||0)>=3)?'꼭 오늘':'여유 있을 때',head=L.querySelector(`.hgrp[data-g="${g}"]`);if(!head)return;head.classList.remove('hempty');
@@ -522,7 +541,7 @@ function swipable(root,itemSel,acts=el=>[['✎<span>고치기</span>','',()=>tod
  const end=()=>{if(!el)return;const r=el;el=null;r.classList.remove('swing');if(axis!=='x')return;if(Math.abs(dx)>W/3){r.classList.add('sw');r.style.transform=`translateX(${dx>0?W:-W}px)`}else shut(r)};
  root.addEventListener('pointerup',end);root.addEventListener('pointercancel',end);
  root.addEventListener('click',e=>{if(axis==='x'&&!e.target.closest('.swa')){e.stopPropagation();e.preventDefault();axis=null}},true)}  // 민 직후의 탭은 고치기 창을 열지 않게
-swipable($('hlist'),'.hit[data-todo]:not(.hdone)');swipable($('todo'),'li[data-i]');
+swipable($('hlist'),'.hit[data-todo]:not(.hdone)');swipable($('hlist'),'.hit[data-k]',alertActs);swipable($('hlist'),'.hit.hdone[data-todo]',el=>[['🗑<span>삭제</span>','d',()=>delTodo(...rk(el))]]);  // 체크한 것도 밀어서 지우기swipable($('todo'),'li[data-i]');
 // 현황표 단계: 옆으로 밀면 이름/삭제, 길게 눌러 끌면 같은 일 안에서 순서 바꾸기 (전체 단계 목록·남은 단계 목록 둘 다)
 swipable($('projects'),'.steps li[data-k]',el=>{const i=+el.closest('.proj').dataset.p,k=+el.dataset.k;return [['✎<span>이름</span>','',()=>stepSheet(i,k)],['🗑<span>삭제</span>','d',()=>stepDel(i,k)]]});
 function stepDel(i,k){const ps=PS(),pk=ps[i].title,[it]=ps[i].steps.splice(k,1);pstamp(ps[i]);save('projects',ps);toast('단계를 지웠어요',()=>{const c=PS(),a=PJ(i,pk);if(a<0)return;c[a].steps.splice(Math.min(k,c[a].steps.length),0,it);save('projects',c)})}
