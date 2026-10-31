@@ -73,6 +73,13 @@ html:not(.hmore-on) .hit.hmore{display:none}#hlist.snap .hmorebtn{display:block!
 .hit[data-todo],.todo li[data-i]{position:relative;touch-action:pan-y;transition:transform .18s}.swing{transition:none!important}.hlist,.todo{overflow:hidden}
 .swa{position:absolute;top:0;bottom:0;left:100%;display:flex}.swr .swa{left:auto;right:100%}#hlist.snap .swa button,.todo .swa button{display:flex!important;opacity:1}.swa button{flex-direction:column;justify-content:center;align-items:center;gap:2px;width:56px;border:0;border-radius:0;font:inherit;font-size:11.5px;line-height:1;color:#fff;background:var(--mute);padding:0}.swa button.p{background:var(--gold)}.swa button.d{background:var(--red)}
 .steps li[data-k]{position:relative;touch-action:pan-y;transition:transform .18s}.proj{overflow:hidden}.proj .row b,.oc td b,.list .row b{cursor:pointer}.list .row b{flex:1}.tsh textarea{width:100%;box-sizing:border-box;padding:10px 13px;border:1px solid var(--line);border-radius:12px;font:inherit;font-size:15px;background:var(--soft);color:var(--ink);margin:0 0 10px}#projects .hhint{margin-bottom:8px}#projects form.inline{margin:0 0 12px}
+.toast button{margin-left:12px;border:0;background:var(--gold);color:#fff;border-radius:20px;padding:4px 10px;font:inherit;font-size:12.5px}
+.qchips{display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap}.qchips .muted{font-size:12px}.qchips button,#hlist.snap .qchips button{display:inline-block!important;border:1px solid var(--line);background:var(--card);border-radius:40px;padding:5px 11px;font:inherit;font-size:12.5px;color:var(--ink2)}
+/* 온라인 클래스 학생 표(맥 6칸)는 폰에선 한 학생 한 덩어리로: 이름 한 줄, 나머지는 '담당 Lhot · 요일 …'처럼 이어 붙임 */
+#oc table.oc{display:block;min-width:0!important}#oc table.oc tbody{display:block}#oc table.oc tr{display:flex;flex-wrap:wrap;gap:2px 10px;padding:8px 0;border-bottom:1px solid var(--line2)}#oc table.oc tr:has(th){display:none}
+#oc table.oc td{display:inline;padding:0;border:0;white-space:normal;font-size:13px}#oc table.oc td:first-child{flex:1 0 100%;font-size:14px}#oc table.oc td:empty{display:none}
+#oc table.oc td:nth-child(2)::before{content:"담당 ";color:var(--mute)}#oc table.oc td:nth-child(3)::before{content:"시간 ";color:var(--mute)}#oc table.oc td:nth-child(4)::before{content:"반 ";color:var(--mute)}#oc table.oc td:nth-child(5)::before{content:"출석 ";color:var(--mute)}
+.asec{font-size:12.5px;color:var(--mute);margin:10px 0 2px}.oc.one{width:100%;table-layout:fixed}.oc.one td{padding:9px 0;width:100%;white-space:normal;max-width:100%}.oc.one .row{gap:8px;flex-wrap:nowrap;align-items:baseline}.oc.one .row b{flex:1 1 auto;min-width:0}.oc.one .row a,.oc.one .row .muted{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%}.oc.one .row a{text-align:right}.oc.one .muted{word-break:break-word}
 .hpin{margin-right:3px}.hhint{font-size:11.5px;color:var(--mute);margin:0 0 4px}.tsh .grp{display:flex;gap:8px;margin:0 0 12px}.tsh .grp button{flex:1;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--card);font:inherit;font-size:14px;color:var(--ink)}.tsh .grp button.on{background:var(--goldbg);border-color:var(--gold);color:var(--gold)}
 #hlist.snap form{display:flex!important;margin-top:10px}#hlist.snap form input{display:block!important;flex:1;padding:11px 13px;border:1px solid var(--line);border-radius:12px;font:inherit;font-size:15px;background:var(--soft);color:var(--ink)}
 .hk{display:none}
@@ -145,7 +152,7 @@ body.sorting{user-select:none;-webkit-user-select:none}.lifting{position:relativ
 .live{color:var(--green);font-size:13px}
 #t-chat .card{display:flex;flex-direction:column;height:calc(100dvh - var(--hh) - 80px - env(safe-area-inset-bottom));margin:0}
 #t-chat .chat{flex:1;overflow-y:auto;margin:0 -6px;padding:2px 6px 8px;overscroll-behavior:contain}
-.quick{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:8px 0 0}.quick::-webkit-scrollbar{display:none}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 0}.quick::-webkit-scrollbar{display:none}
 .quick button{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--ink2);border-radius:999px;padding:6px 12px;font:inherit;font-size:12.5px}
 /* 입력·버튼 */
 form.inline{display:flex;gap:8px;margin-top:10px}
@@ -200,7 +207,7 @@ button.sm,form.inline button.sm{background:var(--gold);color:#fff;border-radius:
   <div id="htl" class="snap"></div>
   <div id="hlist" class="snap"></div>
   <div class="card" data-id="todo"><h2>오늘 할 일 <span class="badge" id="todobadge">0</span><span class="cc"><button onclick="pcSize('todo')">⇔</button><button onclick="pcHide('todo')">×</button></span></h2><ul class="todo" id="todo"></ul>
-   <form class="inline" onsubmit="addTodo(event)"><input id="ti" placeholder="할 일 추가 (!!!높음 @내일 돼요)"><button class="sm">추가</button></form><div id="tdone"></div>
+   <form class="inline" onsubmit="addTodo(event)"><input id="ti" placeholder="할 일 추가 (!!!높음 @내일 돼요)"><button class="sm">추가</button></form><div class="qchips"><span class="muted">적고 바로:</span><button type="button" onclick="addQuick('오늘','ti')">꼭 오늘</button><button type="button" onclick="addQuick('내일','ti')">내일</button><button type="button" onclick="addQuick('여유','ti')">여유 있을 때</button></div><div id="tdone"></div>
    <div id="dday"></div></div>
   <div id="hflow" class="snap"></div>
   <div id="hweek" class="snap"></div>
@@ -223,6 +230,8 @@ button.sm,form.inline button.sm{background:var(--gold);color:#fff;border-radius:
   <div class="card snap" data-id="stats"><h2>이번 주 성과<span class="cc"><button onclick="pcSize('stats')">⇔</button><button onclick="pcHide('stats')">×</button></span></h2><div id="stats"></div></div>
   <div class="card snap" data-id="act"><h2>세션 기록<span class="cc"><button onclick="pcSize('act')">⇔</button><button onclick="pcHide('act')">×</button></span></h2><div id="act"></div><div id="sessions"></div></div>
   <div class="card" data-id="contacts"><h2>연락처<span class="cc"><button onclick="pcSize('contacts')">⇔</button><button onclick="pcHide('contacts')">×</button></span></h2><div id="contacts"></div></div>
+  <div class="card" data-id="acc"><h2>계정<span class="cc"><button onclick="pcSize('acc')">⇔</button><button onclick="pcHide('acc')">×</button></span></h2><div id="acc"></div></div>
+  <div class="card" data-id="push"><h2>폰 알림<span class="cc"><button onclick="pcHide('push')">×</button></span></h2><p class="muted" style="margin:0 0 8px">아침 8시에 놓친 것·오늘 마감을 이 폰으로 알려 드려요. (맥 업무판이 켜져 있을 때)</p><div class="row"><button class="sm" id="pushbtn" onclick="pushToggle()">알림 켜기</button><span class="muted" id="pushst"></span></div></div>
   <div class="card"><button class="sm ghost" onclick="logout()">로그아웃</button></div>
  </section>
 </div>
@@ -235,7 +244,8 @@ button.sm,form.inline button.sm{background:var(--gold);color:#fff;border-radius:
 const $=id=>document.getElementById(id);const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const LS={get:k=>{try{return JSON.parse(localStorage.getItem(k)||'null')}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
 const db=supabase.createClient(JH_CFG.url,JH_CFG.key);let UID=null,S={};const today=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
-function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2500)}
+// toast(글, 되돌리기 함수): 함수를 주면 '되돌리기' 버튼이 6초 떠 있다 — 지우기는 확인창 대신 이걸로(맥의 ⌘Z와 같은 역할)
+function toast(t,undo){const e=$('toast');e.textContent=t;if(undo){const b=document.createElement('button');b.textContent='되돌리기';b.onclick=()=>{e.style.display='none';undo();toast('되돌렸어요')};e.append(b)}e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',undo?6000:2500)}
 function tab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.id==='t-'+t));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));localStorage.setItem('tab',t);window.scrollTo(0,0);hh();if(t==='chat')chatBottom()}
 // '오늘 할 것' 한 목록: 맥이 만든 목록에 폰 동작을 다시 단다
 function renderHList(s){const fresh=s.at&&(Date.now()-new Date(s.at))/6e4<15&&s.hlist;$('hlist').innerHTML=fresh?s.hlist:'';document.querySelector('.card[data-id=todo]').style.display=fresh?'none':'';$('care').style.display=fresh?'none':'';if(!fresh)return;$('nb-today').textContent=$('hlist').querySelector('h2 .badge')?.textContent||'';  // 비서 케어는 '오늘 할 것'에 다 들어 있다
@@ -253,7 +263,10 @@ function renderHList(s){const fresh=s.at&&(Date.now()-new Date(s.at))/6e4<15&&s.
  L.querySelectorAll('.hit[data-todo] .ht').forEach(t=>{t.removeAttribute('ondblclick');t.title='눌러서 고치기';t.onclick=()=>todoSheet(+t.closest('.hit').dataset.todo)});
  // 맥의 ✎·📅·× 버튼은 폰에선 숨김(.snap .x) — 대신 옆으로 밀면 나오는 버튼·고치기 창으로 같은 일을 한다
  L.querySelectorAll('.ht[onclick]').forEach(t=>{const id=(t.getAttribute('onclick')||'').match(/'(\w+)'/)?.[1];t.onclick=()=>goCard(id)});
- const f=L.querySelector('form');if(f)f.onsubmit=e=>{e.preventDefault();$('ti').value=$('ht').value;$('ht').value='';addTodo(e);toast('할 일에 넣었어요')}}
+ const f=L.querySelector('form');if(f){f.onsubmit=e=>{e.preventDefault();$('ti').value=$('ht').value;$('ht').value='';addTodo(e);toast('할 일에 넣었어요')};f.insertAdjacentHTML('afterend',QCH('ht'))}}
+// 할 일 추가 칸 아래 빠른 버튼: 적고 나서 '꼭 오늘·내일·여유 있을 때'를 누르면 그 묶음으로 바로 들어간다
+const QCH=src=>`<div class="qchips"><span class="muted">적고 바로:</span><button type="button" onclick="addQuick('오늘','${src}')">꼭 오늘</button><button type="button" onclick="addQuick('내일','${src}')">내일</button><button type="button" onclick="addQuick('여유','${src}')">여유 있을 때</button></div>`;
+function addQuick(w,src){const inp=$(src),v=inp.value.trim();if(!v){inp.focus();return toast('먼저 할 일을 적어 주세요')}inp.value='';$('ti').value=v+(w==='여유'?'':' @'+w);addTodo({preventDefault(){}},w==='여유');toast(w==='여유'?"'여유 있을 때'에 넣었어요":`'${w}' 마감으로 넣었어요`)}
 function hMore(on){on=on??!document.documentElement.classList.contains('hmore-on');document.documentElement.classList.toggle('hmore-on',on);try{localStorage.setItem('hmore',on?'1':'')}catch{}}try{if(localStorage.getItem('hmore'))document.documentElement.classList.add('hmore-on')}catch{}
 function goCard(id){const m={mailc:'mail',occ:'oc',collab:'collab',proj:'proj',todo:'todo'};const cid=m[id]||id;tab(cid==='proj'?'proj':cid==='todo'?'today':'more');const c=document.querySelector(`.card[data-id="${cid}"]`);if(c){c.classList.remove('fold');setTimeout(()=>c.scrollIntoView({behavior:'smooth',block:'start'}),60)}}
 // 비서 탭의 대화방: 비서 + 맥에서 고른 코드 세션(맥이 1분마다·바뀔 때 올림)
@@ -272,7 +285,8 @@ function chatBottom(){const c=$('chat');requestAnimationFrame(()=>c.scrollTop=c.
 function ask(t){inbox('chat',t);$('chat').insertAdjacentHTML('beforeend',`<div class="msg user">${E(t)}<span class="muted">보냄 · 맥이 받으면 답해요</span></div>`);chatBottom()}
 // 카드 제목을 누르면 접기/펴기 (이 기기에 기억). 처음엔 세션 기록·연락처만 접어 둔다
 const FOLD=JSON.parse(localStorage.getItem('pfold')||'["act","contacts","brief","oc","stats"]');
-if(!localStorage.getItem('pfold2')){for(const id of ['oc','stats'])if(!FOLD.includes(id))FOLD.push(id);localStorage.setItem('pfold',JSON.stringify(FOLD));localStorage.setItem('pfold2','1')}  // 긴 카드(온라인 클래스 표·이번 주 성과)는 한 번 접어 둔다. 펴면 기억
+if(!localStorage.getItem('pfold2')){for(const id of ['oc','stats'])if(!FOLD.includes(id))FOLD.push(id);localStorage.setItem('pfold',JSON.stringify(FOLD));localStorage.setItem('pfold2','1')}
+if(!localStorage.getItem('pfold3')){if(!FOLD.includes('acc'))FOLD.push('acc');localStorage.setItem('pfold',JSON.stringify(FOLD));localStorage.setItem('pfold3','1')}  // 계정 카드는 접어 둔 채 시작  // 긴 카드(온라인 클래스 표·이번 주 성과)는 한 번 접어 둔다. 펴면 기억
 document.addEventListener('click',e=>{const h=e.target.closest('.card[data-id] > h2');if(!h||e.target.closest('button'))return;const c=h.parentElement,id=c.dataset.id;if(id==='chat')return;c.classList.toggle('fold');const i=FOLD.indexOf(id);c.classList.contains('fold')?(i<0&&FOLD.push(id)):(i>=0&&FOLD.splice(i,1));localStorage.setItem('pfold',JSON.stringify(FOLD))});
 document.querySelectorAll('.card[data-id]').forEach(c=>c.classList.toggle('fold',FOLD.includes(c.dataset.id)));
 // 브리핑 날짜 칸: 옆으로 넘길 때 아래 점 표시
@@ -307,7 +321,30 @@ function staleness(){if(!navigator.onLine)return netBadge();const s=S.snapshot?.
 // ---- 렌더 ----
 function render(k){const s=S.snapshot?.data||{};if(!k||k==='snapshot'){$('head').innerHTML=s.head||'';$('hmailn').textContent=s.mailn||'';document.querySelector('.hmail').classList.toggle('on',!!s.mailn);for(const id of ['brief','mail','collab','oc','stats','act','sessions'])$(id).innerHTML=s[id]||'<p class=muted>맥에서 올린 내용 없음</p>';$('care').innerHTML=s.care||'';careBtns();for(const id of ['hai','htl','hflow','hweek'])$(id).innerHTML=s[id]||'';chanBtns();renderHList(s);renderRooms();$('pend').hidden=!s.pending;$('nb-chat').textContent=s.pending?'…':'';briefDots();staleness()}
  if(!k||k==='todo')renderTodo();if(!k||k==='projects')renderProj();if(!k||k==='todo'||k==='projects')renderDday();
- if((!k||k==='memo')&&document.activeElement!==$('memo'))$('memo').value=S.memo?.data?.text||'';if(!k||k==='contacts')renderContacts()}
+ if((!k||k==='memo')&&document.activeElement!==$('memo'))$('memo').value=S.memo?.data?.text||'';if(!k||k==='contacts')renderContacts();if(!k||k==='accounts')renderAcc();if(!k||k==='push_pub')renderPush()}
+// 계정: 맥 업무판과 같은 항목(묶음 SNS/업무·서비스·아이디·주소·메모). 비밀번호는 안 둔다. 서비스 이름 누르면 고치기 창
+function renderAcc(){const as=S.accounts?.data||[];let h='';for(const g of ['SNS','업무']){const rows=as.map((a,i)=>[a,i]).filter(([a])=>(a.group||'업무')===g);if(!rows.length)continue;
+ h+=`<h3 class="asec">${g}</h3><table class="oc one">`+rows.map(([a,i])=>`<tr><td><div class="row"><b onclick="accSheet(${i})">${E(a.service)}</b>${a.url?`<a href="${E(a.url)}" target="_blank">${E(a.id||'열기')} ↗</a>`:`<span class="muted">${E(a.id||'')}</span>`}</div><div class="muted">${E(a.note||'')}</div></td></tr>`).join('')+'</table>'}
+ $('acc').innerHTML=(h||'<p class=muted>계정 메모 없음</p>')+'<form class="inline" onsubmit="addAcc(event)"><input id="an" placeholder="서비스 추가 (아이디·주소는 눌러서)"><button class="sm">추가</button></form><p class="muted" style="margin:6px 0 0;font-size:12px">비밀번호는 저장하지 않아요 — 아이디·주소·메모만.</p>'}
+function addAcc(e){e.preventDefault();const v=$('an').value.trim();if(!v)return;save('accounts',[...(S.accounts?.data||[]),{group:'업무',service:v,id:'',url:'',note:''}]);toast('넣었어요 — 서비스 이름을 누르면 아이디·주소를 적을 수 있어요')}
+function accSheet(i){const a=(S.accounts?.data||[])[i];if(!a)return;const w=document.createElement('div');w.className='tsh';const F=[['service','서비스'],['id','아이디'],['url','주소 (https://…)'],['note','메모']];let grp=a.group||'업무';
+ w.innerHTML=`<div>${F.map(([k,l])=>`<b>${l}</b><input data-k="${k}" value="${E(a[k]||'')}">`).join('')}<b>묶음</b><div class="grp">${['SNS','업무'].map(g=>`<button data-g="${g}" class="${grp===g?'on':''}">${g}</button>`).join('')}</div><div class="tr"><button class="del">삭제</button><button class="no">닫기</button><button class="pri">저장</button></div></div>`;
+ const close=()=>w.remove();w.onclick=e=>{if(e.target===w)close()};w.querySelector('.no').onclick=close;
+ w.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{grp=b.dataset.g;w.querySelectorAll('[data-g]').forEach(x=>x.classList.toggle('on',x===b))});
+ w.querySelector('.del').onclick=()=>{const prev=S.accounts?.data||[],as=[...prev];as.splice(i,1);close();save('accounts',as);toast(`'${a.service}' 지웠어요`,()=>save('accounts',prev))};
+ w.querySelector('.pri').onclick=()=>{const as=(S.accounts?.data||[]).map(x=>({...x}));w.querySelectorAll('[data-k]').forEach(inp=>as[i][inp.dataset.k]=inp.value.trim());as[i].group=grp;if(!as[i].service)return;close();save('accounts',as);toast('고쳤어요')};
+ document.body.appendChild(w)}
+// 폰 알림(웹 푸시): 맥이 올린 공개키(dash_state push_pub)로 구독하고, 구독 정보는 inbox 'push'로 맥에 보낸다. 맥이 아침 8시에 보냄
+const b64u=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((s.length+3)%4)),c=>c.charCodeAt(0));
+async function pushSub(){try{const reg=await navigator.serviceWorker?.getRegistration();return await reg?.pushManager?.getSubscription()}catch{return null}}
+async function renderPush(){const b=$('pushbtn'),st=$('pushst');if(!b)return;const key=S.push_pub?.data?.key;
+ if(!key||!('PushManager' in window)||!('serviceWorker' in navigator)){b.hidden=true;st.textContent=!key?'맥 업무판이 한 번 켜져야 알림 준비가 돼요':'이 브라우저는 알림이 안 돼요 — 홈 화면에 추가한 앱에서 켜 주세요';return}
+ if(Notification.permission==='denied'){b.hidden=true;st.textContent='알림이 차단돼 있어요 — 폰 설정에서 이 앱 알림을 허용해 주세요';return}
+ const on=!!(await pushSub());b.hidden=false;b.textContent=on?'알림 끄기':'알림 켜기';b.className='sm'+(on?' ghost':'');st.textContent=on?'켜짐 ✓':''}
+async function pushToggle(){const key=S.push_pub?.data?.key;try{const reg=await navigator.serviceWorker.ready,cur=await reg.pushManager.getSubscription();
+ if(cur){await inbox('push_off',cur.endpoint);await cur.unsubscribe();toast('알림을 껐어요')}
+ else{if(await Notification.requestPermission()!=='granted')return toast('알림 허용을 안 하셨어요');const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(key)});await inbox('push',JSON.stringify(sub.toJSON()));toast('알림을 켰어요 — 곧 시험 알림이 와요')}}
+ catch(e){toast('알림 설정 실패: '+e.message)}renderPush()}
 function todoDone(t){const d=today();if(t.daily===true)return t.done===d;if(t.daily==='weekly'){const n=new Date();const mon=new Date(n.getTime()-((n.getDay()+6)%7)*864e5);return (t.done||'')>=mon.toISOString().slice(0,10)}return !!t.done}
 function renderTodo(){const items=S.todo?.data||[];const d=today();let left=0,h='';
  const vis=items.map((t,i)=>({t,i,done:todoDone(t)})).filter(({t,done})=>t.daily||!t.done||t.done===d);
@@ -316,7 +353,7 @@ function renderTodo(){const items=S.todo?.data||[];const d=today();let left=0,h=
  const sec=({t,done})=>done?4:t.by?3:t.due&&t.due<d?0:(t.daily||t.due===d||t.due===tmr||(t.prio||0)>=3)?1:2;vis.sort((a,b)=>sec(a)-sec(b));
  let cur=-1;vis.forEach(({t,i,done})=>{if(!done&&!t.by)left++;const c=sec({t,done});if(c!==cur){h+=`<li class="tsec ${c===4?'k':c===3?'':'m'}">${GN[c]}${c===3?'<small>Claude가 넣은 것</small>':''}</li>`}cur=c;
  const due=t.due?`<span class="pill ${t.due<d&&!done?'red':t.due===d?'':'gray'}">${t.due===d?'오늘':t.due.slice(5).replace('-','/')}</span>`:'';
- h+=`<li class="${done?'done':''}" data-i="${i}"><label><input type="checkbox" ${done?'checked':''} onchange="toggleTodo(${i})"><span onclick="event.preventDefault();todoSheet(${i})">${E(t.text)}${t.by?`<small class="hsrc">· ${E(t.src||'Claude')}</small>`:''}</span></label>${t.by&&!done?`<button class="hadopt" onclick="adoptTodo(${i})">내 할 일로</button>`:''}${due}${t.daily?`<span class="tag">${t.daily==='weekly'?'매주':'매일'}</span>`:''}<button class="x" onclick="event.preventDefault();todoSheet(${i})" title="고치기">✎</button><button class="x" onclick="delTodo(${i})">×</button></li>`});
+ h+=`<li class="${done?'done':''}" data-i="${i}"><label><input type="checkbox" ${done?'checked':''} onchange="toggleTodo(${i})"><span onclick="event.preventDefault();todoSheet(${i})">${E(t.text)}${t.by?`<small class="hsrc">· ${E(t.src||'Claude')}</small>`:''}</span></label>${t.by&&!done?`<button class="hadopt" onclick="adoptTodo(${i})">내 할 일로</button>`:''}${due}${t.daily?`<span class="tag">${t.daily==='weekly'?'매주':'매일'}</span>`:''}</li>`});  // ✎·× 버튼 대신 '오늘 할 것'과 같게: 누르면 고치기, 옆으로 밀면 고정·삭제
  $('todo').innerHTML=h||'<li class=muted>할 일 없음</li>';$('todobadge').textContent=left;$('todobadge').className='badge'+(left?'':' zero');$('nb-today').textContent=(document.querySelector('#hlist h2 .badge')?.textContent||left)||'';
  // 체크해서 화면에서 사라진 것(오늘 전에 끝낸, 매일 할 일 제외) 모아보기
  const hid=items.map((t,i)=>({t,i})).filter(({t})=>!t.daily&&t.done&&t.done!==d).sort((a,b)=>(b.t.done||'').localeCompare(a.t.done||''));
@@ -337,11 +374,12 @@ function pinTodo(i){const items=(S.todo?.data||[]).map(x=>({...x})),t=items[i];i
  hPatch(i,r=>{r.querySelector('.hpin')?.remove();if(on)(r.querySelector('.ht .hm')||r.querySelector('.ht')).insertAdjacentHTML('afterbegin','<span class="hpin">📌</span>')});toast(on?'고정했어요 — 꼭 오늘에 계속 있어요':'고정을 풀었어요')}
 function adoptTodo(i){const items=(S.todo?.data||[]).map(x=>({...x}));['by','src','src_cli'].forEach(k=>delete items[i][k]);save('todo',items);toast('내 할 일로 옮겼어요')}
 function toggleTodo(i){const items=[...(S.todo?.data||[])];const t=items[i];t.done=todoDone(t)?null:today();save('todo',items)}
-function delTodo(i){if(!confirm('지울까요?'))return;const items=[...(S.todo?.data||[])];items.splice(i,1);save('todo',items);
- document.querySelectorAll('#hlist .hit[data-todo]').forEach(r=>{const k=+r.dataset.todo;if(k===i)r.remove();else if(k>i)r.dataset.todo=k-1});toast('지웠어요')}  // 뒤 줄 번호를 하나씩 당겨 둔다
-function addTodo(e){e.preventDefault();let text=$('ti').value.trim();if(!text)return;let prio=0,due='';const m=text.match(/(!{1,3})/);if(m){prio=m[1].length;text=text.replace(m[1],'')}
+function delTodo(i){const prev=S.todo?.data||[],items=[...prev];items.splice(i,1);save('todo',items);
+ const rows=[...document.querySelectorAll('#hlist .hit[data-todo]')],r=rows.find(x=>+x.dataset.todo===i),nxt=r?.nextSibling,par=r?.parentNode;rows.forEach(x=>{const k=+x.dataset.todo;if(k===i)x.remove();else if(k>i)x.dataset.todo=k-1});  // 뒤 줄 번호를 하나씩 당겨 둔다
+ toast('지웠어요',()=>{save('todo',prev);document.querySelectorAll('#hlist .hit[data-todo]').forEach(x=>{const k=+x.dataset.todo;if(k>=i)x.dataset.todo=k+1});if(r)par.insertBefore(r,nxt)})}
+function addTodo(e,later){e.preventDefault();let text=$('ti').value.trim();if(!text)return;let prio=0,due='';const m=text.match(/(!{1,3})/);if(m){prio=m[1].length;text=text.replace(m[1],'')}
  const dm=text.match(/@(오늘|내일|모레|\d{1,2}\/\d{1,2})/);if(dm){const d=new Date();const w=dm[1];if(w==='내일')d.setDate(d.getDate()+1);if(w==='모레')d.setDate(d.getDate()+2);if(w.includes('/')){const [mo,da]=w.split('/');d.setMonth(+mo-1,+da)}due=new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);text=text.replace(dm[0],'')}
- const items=[...(S.todo?.data||[]),{text:text.replace(/\s+/g,' ').trim(),daily:false,done:null,prio,due}];$('ti').value='';save('todo',items)}
+ const items=[...(S.todo?.data||[]),{text:text.replace(/\s+/g,' ').trim(),daily:false,done:null,prio,due,...(later?{later:true}:{})}];$('ti').value='';save('todo',items)}
 function pstate(p){const steps=p.steps||[];const done=steps.filter(s=>s.done).length;const cur=steps.find(s=>!s.done);const idle=Math.floor((Date.now()-new Date(p.updated||p.created))/864e5);return {done,n:steps.length,cur,idle}}
 // 현황표: 제목 누르면 고치기 창(제목·마감·메모·앞뒤 순서·보류/완료/삭제), 단계는 누르면 완료 토글·옆으로 밀면 이름/삭제·길게 눌러 끌면 순서
 function renderProj(){const ps=S.projects?.data||[];let h='',n=0;ps.forEach((p,i)=>{if(p.status!=='active')return;n++;const {done,n:tot,cur,idle}=pstate(p);const rem=p.steps.map((s,k)=>[s,k]).filter(([s])=>!s.done);
@@ -357,7 +395,7 @@ function projStatus(i,st){const ps=PS();ps[i].status=st;pstamp(ps[i]);save('proj
 function projSheet(i){const p=(S.projects?.data||[])[i];if(!p)return;const w=document.createElement('div');w.className='tsh';
  w.innerHTML=`<div><b>일 고치기</b><input id="psT" value="${E(p.title)}"><b>마감 (비우면 없음)</b><input id="psD" type="date" value="${p.due||''}"><b>메모</b><textarea id="psN" rows="2">${E(p.note||'')}</textarea><b>순서·상태</b><div class="grp"><button data-mv="-1">↑ 앞으로</button><button data-mv="1">↓ 뒤로</button>${p.status==='active'?'<button data-st="hold">보류</button><button data-st="done">완료</button>':'<button data-st="active">다시 진행</button>'}</div><div class="tr"><button class="del">삭제</button><button class="no">닫기</button><button class="pri">저장</button></div></div>`;
  const close=()=>w.remove();w.onclick=e=>{if(e.target===w)close()};w.querySelector('.no').onclick=close;
- w.querySelector('.del').onclick=()=>{if(!confirm(`'${p.title}' 일을 지울까요?`))return;const ps=PS();ps.splice(i,1);close();save('projects',ps);toast('지웠어요')};
+ w.querySelector('.del').onclick=()=>{const prev=S.projects?.data||[],ps=PS();ps.splice(i,1);close();save('projects',ps);toast(`'${p.title.slice(0,14)}' 지웠어요`,()=>save('projects',prev))};
  w.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{close();projStatus(i,b.dataset.st)});
  w.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>{const ps=PS(),j=i+ +b.dataset.mv;if(j<0||j>=ps.length)return;[ps[i],ps[j]]=[ps[j],ps[i]];close();save('projects',ps);toast('순서를 바꿨어요')});
  w.querySelector('.pri').onclick=()=>{const v=w.querySelector('#psT').value.trim();if(!v)return;const ps=PS();Object.assign(ps[i],{title:v,due:w.querySelector('#psD').value||'',note:w.querySelector('#psN').value.trim()});pstamp(ps[i]);close();save('projects',ps);toast('고쳤어요')};
@@ -365,7 +403,7 @@ function projSheet(i){const p=(S.projects?.data||[])[i];if(!p)return;const w=doc
 function stepSheet(i,k){const p=(S.projects?.data||[])[i],s=p?.steps[k];if(!s)return;const w=document.createElement('div');w.className='tsh';
  w.innerHTML=`<div><b>단계 고치기 · ${E(p.title)}</b><input id="ssT" value="${E(s.name)}"><div class="tr"><button class="del">삭제</button><button class="no">닫기</button><button class="pri">저장</button></div></div>`;
  const close=()=>w.remove();w.onclick=e=>{if(e.target===w)close()};w.querySelector('.no').onclick=close;
- w.querySelector('.del').onclick=()=>{if(!confirm(`'${s.name}' 단계를 지울까요?`))return;const ps=PS();ps[i].steps.splice(k,1);pstamp(ps[i]);close();save('projects',ps);toast('단계를 지웠어요')};
+ w.querySelector('.del').onclick=()=>{close();stepDel(i,k)};
  w.querySelector('.pri').onclick=()=>{const v=w.querySelector('#ssT').value.trim();if(!v)return;const ps=PS();ps[i].steps[k].name=v;pstamp(ps[i]);close();save('projects',ps);toast('고쳤어요')};
  document.body.appendChild(w)}
 function stepOrder(i,ks){const ps=PS(),st=ps[i].steps;const slots=[...ks].sort((a,b)=>a-b),picked=ks.map(k=>st[k]);slots.forEach((p,j)=>st[p]=picked[j]);pstamp(ps[i]);save('projects',ps);toast('단계 순서를 바꿨어요')}
@@ -375,12 +413,14 @@ function nextStep(i){const ps=JSON.parse(JSON.stringify(S.projects?.data||[]));c
 function renderDday(){const d=today();const items=[];(S.todo?.data||[]).forEach(t=>{if(t.due&&!todoDone(t))items.push([t.due,t.text])});(S.projects?.data||[]).forEach(p=>{if(p.due&&p.status==='active')items.push([p.due,p.title+' (현황표)'])});
  items.sort();$('dday').innerHTML=items.length?'<h3 class="muted" style="font-size:13px;margin:12px 0 4px">마감</h3><ul class="list">'+items.map(([due,t])=>{const n=Math.round((new Date(due)-new Date(d))/864e5);return `<li><span class="pill ${n<0?'red':n<=2?'':'gray'}">${n<0?'D+'+(-n):n===0?'D-day':'D-'+n}</span> ${E(t)}</li>`}).join('')+'</ul>':''}
 // 연락처: 이름 누르면 고치기 창(이름·소속·역할·연락처·메모·삭제), 아래 칸으로 추가 — 맥의 contact_add/edit/del과 같은 항목
-function renderContacts(){const cs=S.contacts?.data||[];$('contacts').innerHTML='<table class="oc">'+cs.map((c,i)=>`<tr><td><b onclick="contactSheet(${i})">${E(c.name)}</b><div class="muted">${E(c.org||'')}${c.role?' · '+E(c.role):''}</div></td><td>${c.contact?(/^https?:/.test(c.contact)?`<a href="${E(c.contact)}" target="_blank">열기</a>`:/@/.test(c.contact)?`<a href="mailto:${E(c.contact)}">${E(c.contact)}</a>`:E(c.contact)):''}<div class="muted">${E(c.note||'')}</div></td></tr>`).join('')+'</table>'+(cs.length?'':'<p class=muted>연락처 없음</p>')+'<form class="inline" onsubmit="addContact(event)"><input id="cn" placeholder="이름 추가 (소속·연락처는 눌러서)"><button class="sm">추가</button></form>'}
+// 연락처 칸: 전화번호면 누르면 바로 전화, 카톡 링크면 카톡, 메일이면 메일
+const clink=v=>!v?'':/^https?:/.test(v)?`<a href="${E(v)}" target="_blank">${/kakao/i.test(v)?'💬 카톡 열기':'열기'}</a>`:/@/.test(v)?`<a href="mailto:${E(v)}">${E(v)}</a>`:/^[\d\s\-+()]{7,}$/.test(v)?`<a href="tel:${E(v.replace(/[^\d+]/g,''))}">📞 ${E(v)}</a>`:E(v);
+function renderContacts(){const cs=S.contacts?.data||[];$('contacts').innerHTML='<table class="oc one">'+cs.map((c,i)=>`<tr><td><div class="row"><b onclick="contactSheet(${i})">${E(c.name)}</b><span class="muted">${E(c.org||'')}${c.role?' · '+E(c.role):''}</span></div>${c.contact?`<div>${clink(c.contact)}</div>`:''}${c.note?`<div class="muted">${E(c.note)}</div>`:''}</td></tr>`).join('')+'</table>'+(cs.length?'':'<p class=muted>연락처 없음</p>')+'<form class="inline" onsubmit="addContact(event)"><input id="cn" placeholder="이름 추가 (소속·연락처는 눌러서)"><button class="sm">추가</button></form>'}
 function addContact(e){e.preventDefault();const v=$('cn').value.trim();if(!v)return;const cs=[...(S.contacts?.data||[]),{name:v,org:'',role:'',channel:'',contact:'',note:'',last:''}];save('contacts',cs);toast('넣었어요 — 이름을 누르면 소속·연락처를 적을 수 있어요')}
 function contactSheet(i){const c=(S.contacts?.data||[])[i];if(!c)return;const w=document.createElement('div');w.className='tsh';const F=[['name','이름'],['org','소속'],['role','역할'],['contact','연락처 (전화·메일·링크)'],['note','메모']];
  w.innerHTML=`<div>${F.map(([k,l])=>`<b>${l}</b><input data-k="${k}" value="${E(c[k]||'')}">`).join('')}<div class="tr"><button class="del">삭제</button><button class="no">닫기</button><button class="pri">저장</button></div></div>`;
  const close=()=>w.remove();w.onclick=e=>{if(e.target===w)close()};w.querySelector('.no').onclick=close;
- w.querySelector('.del').onclick=()=>{if(!confirm(`'${c.name}' 연락처를 지울까요?`))return;const cs=[...(S.contacts?.data||[])];cs.splice(i,1);close();save('contacts',cs);toast('지웠어요')};
+ w.querySelector('.del').onclick=()=>{const prev=S.contacts?.data||[],cs=[...prev];cs.splice(i,1);close();save('contacts',cs);toast(`'${c.name}' 지웠어요`,()=>save('contacts',prev))};
  w.querySelector('.pri').onclick=()=>{const cs=(S.contacts?.data||[]).map(x=>({...x}));w.querySelectorAll('[data-k]').forEach(inp=>cs[i][inp.dataset.k]=inp.value.trim());if(!cs[i].name)return;close();save('contacts',cs);toast('고쳤어요')};
  document.body.appendChild(w)}
 let memoT;function memoSave(){$('memost').textContent='저장 중…';clearTimeout(memoT);memoT=setTimeout(async()=>{await save('memo',{text:$('memo').value});$('memost').textContent='저장됨 '+new Date().toTimeString().slice(0,5)},800)}
@@ -428,7 +468,7 @@ swipable($('hlist'),'.hit[data-todo]',el=>+el.dataset.todo);swipable($('todo'),'
 // 현황표 단계: 옆으로 밀면 이름/삭제, 길게 눌러 끌면 같은 일 안에서 순서 바꾸기 (전체 단계 목록·남은 단계 목록 둘 다)
 const stepIdx=el=>`${+el.closest('.proj').dataset.p},${+el.dataset.k}`;
 swipable($('projects'),'.steps li[data-k]',stepIdx,i=>`<button onclick="stepSheet(${i})">✎<span>이름</span></button><button class="d" onclick="stepDel(${i})">🗑<span>삭제</span></button>`);
-function stepDel(i,k){const ps=PS();if(!confirm(`'${ps[i].steps[k].name}' 단계를 지울까요?`))return;ps[i].steps.splice(k,1);pstamp(ps[i]);save('projects',ps);toast('단계를 지웠어요')}
+function stepDel(i,k){const prev=S.projects?.data||[],ps=PS();ps[i].steps.splice(k,1);pstamp(ps[i]);save('projects',ps);toast('단계를 지웠어요',()=>save('projects',prev))}
 sortable($('projects'),'.steps li[data-k]',{group:el=>el.closest('.steps'),onDrop:el=>{const i=+el.closest('.proj').dataset.p,ol=el.closest('.steps'),ks=[...ol.querySelectorAll('li[data-k]')].map(l=>+l.dataset.k);stepOrder(i,ks)}});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></html>
