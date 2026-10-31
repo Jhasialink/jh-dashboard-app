@@ -250,7 +250,15 @@ function toast(t,undo,soft){const e=$('toast'),up=e.style.display==='block'&&e._
  e.textContent=t;if(undo){const b=document.createElement('button');b.textContent='되돌리기';b.onclick=()=>{e.style.display='none';e._u=null;undo();toast('되돌렸어요')};e.append(b)}e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>{e.style.display='none';e._u=null},undo?6000:2500)}
 // 탭마다 보던 자리를 기억: 다른 탭 갔다 오면 그 자리로(2026-11-01 점검: 탭 바꿀 때마다 맨 위로 갔음). 지금 탭을 다시 누르면 그대로
 const TABY={};let CURTAB='';
-function tab(t){if(t===CURTAB){hh();return}if(CURTAB)TABY[CURTAB]=scrollY;CURTAB=t;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.id==='t-'+t));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));localStorage.setItem('tab',t);window.scrollTo(0,TABY[t]||0);hh();if(t==='chat')chatBottom()}
+function tab(t,fromPop){if(t===CURTAB){hh();return}if(CURTAB)TABY[CURTAB]=scrollY;
+ try{if(!fromPop)(CURTAB?history.pushState:history.replaceState).call(history,{t},'')}catch{}  // 뒤로가기 = 이전 탭(앱 꺼짐 방지)
+ CURTAB=t;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.id==='t-'+t));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));localStorage.setItem('tab',t);window.scrollTo(0,TABY[t]||0);hh();if(t==='chat')chatBottom()}
+// ---- 폰 뒤로가기: 열린 창(고치기·고르는 창 등)이 있으면 그 창만 닫고, 아니면 이전 탭으로. 맨 처음 탭에서만 앱이 닫힌다 ----
+// 2026-11-01 교차 점검: 어느 화면에서든 뒤로가기를 누르면 앱이 꺼졌음(다른 앱들에서 "만들 때마다 똑같다" 지적받은 문제)
+let POPSKIP=false;
+new MutationObserver(ms=>{for(const m of ms){for(const n of m.addedNodes)if(n.classList?.contains('tsh'))try{history.pushState({sheet:1,t:CURTAB},'')}catch{}
+ for(const n of m.removedNodes)if(n.classList?.contains('tsh')&&history.state?.sheet&&!document.querySelector('.tsh')){POPSKIP=true;history.back()}}}).observe(document.body,{childList:true});
+addEventListener('popstate',e=>{if(POPSKIP){POPSKIP=false;return}const sh=[...document.querySelectorAll('.tsh')].pop();if(sh){sh.remove();return}if(e.state?.t)tab(e.state.t,true)});
 // ---- 할 일은 번호(i)와 이름(t)을 같이 들고 다닌다. 그 사이 목록이 바뀌었으면(맥·Claude·폰의 다른 동작) 이름으로 다시 찾고, 없으면 아무것도 안 한다 ----
 // 2026-11-01 사용자 점검: 번호만 믿어서 꾹 눌렀다 놓거나 지운 뒤 다른 할 일이 고쳐지거나 지워졌음
 function TI(i,t){const a=S.todo?.data||[];if(t==null)return a[i]?i:-1;if(a[i]?.text===t)return i;return a.findIndex(x=>x.text===t)}
@@ -409,7 +417,8 @@ function renderTodo(){const items=S.todo?.data||[];const d=today();let left=0,h=
  const vis=items.map((t,i)=>({t,i,done:todoDone(t)})).filter(({t,done})=>t.daily||!t.done||t.done===d);
  // 내 할 일(놓친 것·꼭 오늘·여유 있을 때 — 맥과 같은 묶음) → 비서 추천(Claude가 넣은 것) → 오늘 체크한 것
  const tmr=new Date(Date.now()+864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10),GN=['놓친 것','꼭 오늘','여유 있을 때','비서 추천','✓ 오늘 체크한 것'];
- const sec=({t,done})=>done?4:t.by?3:t.due&&t.due<d?0:(t.daily||t.due===d||t.due===tmr||(t.prio||0)>=3)?1:2;vis.sort((a,b)=>sec(a)-sec(b));
+ const MUST=new Set(S.snapshot?.data?.must||[]);  // 맥이 '꼭 오늘'로 본 것(일정 연결 등)은 폰 대체 목록에서도 꼭 오늘
+ const sec=({t,done})=>done?4:t.by?3:t.due&&t.due<d?0:(t.daily||t.due===d||t.due===tmr||(t.prio||0)>=3||MUST.has(t.text))?1:2;vis.sort((a,b)=>sec(a)-sec(b));
  let cur=-1;vis.forEach(({t,i,done})=>{if(!done&&!t.by)left++;const c=sec({t,done});if(c!==cur){h+=`<li class="tsec ${c===4?'k':c===3?'':'m'}">${GN[c]}${c===3?'<small>Claude가 넣은 것</small>':''}</li>`}cur=c;
  const due=t.due?`<span class="pill ${t.due<d&&!done?'red':t.due===d?'':'gray'}">${t.due===d?'오늘':t.due.slice(5).replace('-','/')}</span>`:'';
  h+=`<li class="${done?'done':''}" data-i="${i}" data-t="${E(t.text)}"><label><input type="checkbox" ${done?'checked':''} onchange="toggleTodo(${i})"><span onclick="event.preventDefault();todoSheet(${i})">${E(t.text)}${t.by?`<small class="hsrc">· ${E(t.src||'Claude')}</small>`:''}</span></label>${t.by&&!done?`<button class="hadopt" onclick="adoptTodo(${i})">내 할 일로</button>`:''}${due}${t.daily?`<span class="tag">${t.daily==='weekly'?'매주':'매일'}</span>`:''}</li>`});  // ✎·× 버튼 대신 '오늘 할 것'과 같게: 누르면 고치기, 옆으로 밀면 고정·삭제
@@ -440,7 +449,8 @@ function delTodo(i,key){i=TI(i,key);if(i<0)return gone();const items=(S.todo?.da
  toast('지웠어요',()=>{const cur=(S.todo?.data||[]).map(x=>({...x}));const at=Math.min(i,cur.length);cur.splice(at,0,it);const live=r&&par&&document.contains(par);if(live)par.insertBefore(r,nxt?.parentNode===par?nxt:null);save('todo',cur);if(!live)hAdd(at)})}
 function addTodo(e,later){const fresh=!!$('hlist').firstChild;e.preventDefault();let text=$('ti').value.trim();if(!text)return;let prio=0,due='';const m=text.match(/(!{1,3})/);if(m){prio=m[1].length;text=text.replace(m[1],'')}
  const dm=text.match(/@(오늘|내일|모레|\d{1,2}\/\d{1,2})/);if(dm){const d=new Date();const w=dm[1];if(w==='내일')d.setDate(d.getDate()+1);if(w==='모레')d.setDate(d.getDate()+2);if(w.includes('/')){const [mo,da]=w.split('/');d.setMonth(+mo-1,+da)}due=new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);text=text.replace(dm[0],'')}
- const items=[...(S.todo?.data||[]),{text:text.replace(/\s+/g,' ').trim(),daily:false,done:null,prio,due,...(later?{later:true}:{})}];$('ti').value='';save('todo',items);if(fresh)hAdd(items.length-1)}
+ text=text.replace(/\s+/g,' ').trim();{const open=new Set((S.todo?.data||[]).filter(x=>!todoDone(x)).map(x=>x.text));if(open.has(text)){let k=2;while(open.has(`${text} (${k})`))k++;text=`${text} (${k})`;setTimeout(()=>toast(`같은 이름이 있어서 (${k})를 붙였어요`),400)}}  // 같은 이름 두 개면 헷갈려서
+ const items=[...(S.todo?.data||[]),{text,daily:false,done:null,prio,due,...(later?{later:true}:{})}];$('ti').value='';save('todo',items);if(fresh)hAdd(items.length-1)}
 function pstate(p){const steps=p.steps||[];const done=steps.filter(s=>s.done).length;const cur=steps.find(s=>!s.done);const idle=Math.floor((Date.now()-new Date(p.updated||p.created))/864e5);return {done,n:steps.length,cur,idle}}
 // 현황표: 제목 누르면 고치기 창(제목·마감·메모·앞뒤 순서·보류/완료/삭제), 단계는 누르면 완료 토글·옆으로 밀면 이름/삭제·길게 눌러 끌면 순서
 function renderProj(){const ps=S.projects?.data||[];let h='',n=0;ps.forEach((p,i)=>{if(p.status!=='active')return;n++;const {done,n:tot,cur,idle}=pstate(p);const rem=p.steps.map((s,k)=>[s,k]).filter(([s])=>!s.done);
