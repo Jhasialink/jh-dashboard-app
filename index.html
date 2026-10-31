@@ -297,8 +297,11 @@ async function logout(){await db.auth.signOut();location.reload()}
 setTimeout(()=>{  // 아래 함수·상수가 다 준비된 뒤에 시작
 if(location.hash==='#test'){fetch('_test.json').then(r=>r.json()).then(rows=>{for(const r of rows)S[r.key]=r;UID='test';$('gate').hidden=true;$('app').hidden=false;render();tab(new URLSearchParams(location.search).get('tab')||'today')})}else{if(LS.get('jh_S')){S=LS.get('jh_S');UID=LS.get('jh_uid');$('gate').hidden=true;$('app').hidden=false;render();tab(localStorage.getItem('tab')||'today');netBadge()}  // 저장본부터 바로 보여 준다(오프라인이어도)
  db.auth.onAuthStateChange((ev,sess)=>{if(sess){UID=sess.user.id;$('gate').hidden=true;$('app').hidden=false;boot()}else if(navigator.onLine||!LS.get('jh_S')){$('gate').hidden=false;$('app').hidden=true}})}},0);
+// boot는 로그인 갱신(1시간마다·앱으로 돌아올 때)·인터넷 재연결 때도 다시 불린다 → 처음 한 번만 탭을 열고(맨 위로) 실시간 연결을 만든다.
+// 2026-11-01: 매번 tab()을 불러 보던 자리에서 맨 위로 튀었음
+let BOOTED=false;
 async function boot(){let data,error;try{({data,error}=await db.from('dash_state').select('key,data,updated_at,src'))}catch(e){error=e}if(error){netBadge();if(navigator.onLine)toast('불러오기 실패 — 저장해 둔 화면을 보여 드려요');return}
- for(const r of data)S[r.key]=r;render();tab(localStorage.getItem('tab')||'today');flush();
+ const y=scrollY;for(const r of data)S[r.key]=r;render();flush();if(BOOTED){scrollTo(0,y);return}BOOTED=true;tab(localStorage.getItem('tab')||'today');
  db.channel('dash').on('postgres_changes',{event:'*',schema:'public',table:'dash_state',filter:'user_id=eq.'+UID},p=>{const r=p.new;if(!r||!r.key)return;if(S[r.key]&&r.src==='phone'&&S[r.key].updated_at>=r.updated_at)return;S[r.key]=r;render(r.key)}).subscribe(st=>{if(st!=='SUBSCRIBED'){$('conn').className='warn';$('conn').textContent='연결 중…'}else staleness()});
  setInterval(staleness,30000)}
 async function save(key,data){const row={user_id:UID,key,data,src:'phone',updated_at:new Date().toISOString()};S[key]={...row};render(key);let error;try{({error}=await db.from('dash_state').upsert(row))}catch(e){error=e}if(error){queue('row',row);toast('오프라인 — 저장해 뒀다가 연결되면 맥에 보내요')}}
