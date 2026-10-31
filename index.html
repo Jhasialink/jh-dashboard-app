@@ -80,7 +80,7 @@ html:not(.hmore-on) .hit.hmore{display:none}#hlist.snap .hmorebtn{display:block!
 #oc table.oc:has(th:nth-child(5)) td{display:inline;padding:0;border:0;white-space:normal;font-size:13px}#oc table.oc:has(th:nth-child(5)) td:first-child{flex:1 0 100%;font-size:14px}#oc table.oc:has(th:nth-child(5)) td:empty{display:none}
 #oc table.oc:has(th:nth-child(5)) td:nth-child(2)::before{content:"담당 ";color:var(--mute)}#oc table.oc:has(th:nth-child(5)) td:nth-child(3)::before{content:"시간 ";color:var(--mute)}#oc table.oc:has(th:nth-child(5)) td:nth-child(4)::before{content:"반 ";color:var(--mute)}#oc table.oc:has(th:nth-child(5)) td:nth-child(5)::before{content:"출석 ";color:var(--mute)}
 .asec{font-size:12.5px;color:var(--mute);margin:10px 0 2px}.oc.one{width:100%;table-layout:fixed}.oc.one td{padding:9px 0;width:100%;white-space:normal;max-width:100%}.oc.one .row{gap:8px;flex-wrap:nowrap;align-items:baseline}.oc.one .row b{flex:1 1 auto;min-width:0}.oc.one .row a,.oc.one .row .muted{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%}.oc.one .row a{text-align:right}.oc.one .muted{word-break:break-word}
-.hpin{margin-right:3px}.hhint{font-size:11.5px;color:var(--mute);margin:0 0 4px}.tsh .grp{display:flex;gap:8px;margin:0 0 12px}.tsh .grp button{flex:1;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--card);font:inherit;font-size:14px;color:var(--ink)}.tsh .grp button.on{background:var(--goldbg);border-color:var(--gold);color:var(--gold)}
+.hpin{margin-right:3px}.hhint{font-size:11.5px;color:var(--mute);margin:0 0 4px}.tsh .vbody{max-height:65vh;overflow:auto;margin-bottom:12px}.tsh .grp{display:flex;gap:8px;margin:0 0 12px}.tsh .grp button{flex:1;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--card);font:inherit;font-size:14px;color:var(--ink)}.tsh .grp button.on{background:var(--goldbg);border-color:var(--gold);color:var(--gold)}
 #hlist.snap form{display:flex!important;margin-top:10px}#hlist.snap form input{display:block!important;flex:1;padding:11px 13px;border:1px solid var(--line);border-radius:12px;font:inherit;font-size:15px;background:var(--soft);color:var(--ink)}
 .hk{display:none}
 @media (max-width:420px){.hit .tag{display:none}}
@@ -245,25 +245,55 @@ const $=id=>document.getElementById(id);const E=s=>String(s??'').replace(/[&<>"'
 const LS={get:k=>{try{return JSON.parse(localStorage.getItem(k)||'null')}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
 const db=supabase.createClient(JH_CFG.url,JH_CFG.key);let UID=null,S={};const today=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
 // toast(글, 되돌리기 함수): 함수를 주면 '되돌리기' 버튼이 6초 떠 있다 — 지우기는 확인창 대신 이걸로(맥의 ⌘Z와 같은 역할)
-function toast(t,undo){const e=$('toast');e.textContent=t;if(undo){const b=document.createElement('button');b.textContent='되돌리기';b.onclick=()=>{e.style.display='none';undo();toast('되돌렸어요')};e.append(b)}e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',undo?6000:2500)}
-function tab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.id==='t-'+t));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));localStorage.setItem('tab',t);window.scrollTo(0,0);hh();if(t==='chat')chatBottom()}
+// soft: 오프라인·보냄 같은 알림 — 되돌리기가 떠 있으면 덮지 않는다. 되돌리기가 떠 있는데 또 지우면 되돌리기를 이어 붙여 둘 다 살린다
+function toast(t,undo,soft){const e=$('toast'),up=e.style.display==='block'&&e._u;if(soft&&up)return;if(undo&&up){const a=e._u,b=undo;undo=()=>{b();a()}}e._u=undo||null;
+ e.textContent=t;if(undo){const b=document.createElement('button');b.textContent='되돌리기';b.onclick=()=>{e.style.display='none';e._u=null;undo();toast('되돌렸어요')};e.append(b)}e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>{e.style.display='none';e._u=null},undo?6000:2500)}
+// 탭마다 보던 자리를 기억: 다른 탭 갔다 오면 그 자리로(2026-11-01 점검: 탭 바꿀 때마다 맨 위로 갔음). 지금 탭을 다시 누르면 그대로
+const TABY={};let CURTAB='';
+function tab(t){if(t===CURTAB){hh();return}if(CURTAB)TABY[CURTAB]=scrollY;CURTAB=t;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.id==='t-'+t));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));localStorage.setItem('tab',t);window.scrollTo(0,TABY[t]||0);hh();if(t==='chat')chatBottom()}
+// ---- 할 일은 번호(i)와 이름(t)을 같이 들고 다닌다. 그 사이 목록이 바뀌었으면(맥·Claude·폰의 다른 동작) 이름으로 다시 찾고, 없으면 아무것도 안 한다 ----
+// 2026-11-01 사용자 점검: 번호만 믿어서 꾹 눌렀다 놓거나 지운 뒤 다른 할 일이 고쳐지거나 지워졌음
+function TI(i,t){const a=S.todo?.data||[];if(t==null)return a[i]?i:-1;if(a[i]?.text===t)return i;return a.findIndex(x=>x.text===t)}
+function RI(arr,i,key,f){if(arr[i]?.[f]===key)return i;return arr.findIndex(x=>x[f]===key)}  // 현황표·연락처·계정도 같은 식(제목·이름·서비스로)
+function gone(){toast('그 사이 목록이 바뀌었어요 — 새로 그렸으니 다시 눌러 주세요');render()}
+const rk=el=>[+(el.dataset.todo??el.dataset.i),el.dataset.t];
+const hFull=h=>h.dataset.t||h.querySelector('.ht')?.title||[...(h.querySelector('.hm')||h.querySelector('.ht')||h).childNodes].find(n=>n.nodeType===3)?.nodeValue.trim()||'';
+// 맥이 만든 '오늘 할 것' 줄을 지금 할 일 목록에 맞춘다: 번호를 이름으로 다시 찾고, 없어진 건 뺀다(맥이 다시 보내기 전 사이)
+function hFix(){const L=$('hlist');if(!L.firstChild)return;L.querySelectorAll('.hit[data-todo]').forEach(r=>{const j=TI(+r.dataset.todo,r.dataset.t);if(j<0)r.remove();else r.dataset.todo=j})}
+function hBadge(d){const b=$('hlist').querySelector('h2 .badge');if(!b)return;b.textContent=Math.max(0,(+b.textContent||0)+d);$('nb-today').textContent=b.textContent}
+// 글 넣는 작은 창(폰 앱 안에서는 prompt()가 안 뜨는 경우가 있어 직접 만든 창으로)
+function askText(title,ph,cb,val=''){const w=document.createElement('div');w.className='tsh';w.innerHTML=`<div><b>${E(title)}</b><input id="atT" placeholder="${E(ph)}" value="${E(val)}"><div class="tr"><button class="no">닫기</button><button class="pri">넣기</button></div></div>`;
+ const close=()=>w.remove();w.onclick=e=>{if(e.target===w)close()};w.querySelector('.no').onclick=close;const go=()=>{const v=w.querySelector('#atT').value.trim();if(!v)return;close();cb(v)};w.querySelector('.pri').onclick=go;w.querySelector('#atT').onkeydown=e=>{if(e.key==='Enter')go()};document.body.appendChild(w);setTimeout(()=>w.querySelector('#atT').focus(),50)}
+function viewSheet(html){const w=document.createElement('div');w.className='tsh';w.innerHTML=`<div><div class="vbody">${html}</div><div class="tr"><button class="no">닫기</button></div></div>`;const close=()=>w.remove();w.onclick=e=>{if(e.target===w)close()};w.querySelector('.no').onclick=close;document.body.appendChild(w)}
+// 맥 화면용 버튼이 부르는 함수들(폰에 없어서 눌러도 아무 일 없던 것): 폰에서 맞는 곳으로
+function roomTabs(){}function goCardId(id){goCard(id)}function drawerToggle(){tab('chat')}function roomOpen(cli){pickRoom(cli||'');tab('chat')}function openModal(id){const s=$(id);if(s)viewSheet(s.innerHTML)}
 // '오늘 할 것' 한 목록: 맥이 만든 목록에 폰 동작을 다시 단다
 function renderHList(s){const fresh=s.at&&(Date.now()-new Date(s.at))/6e4<15&&s.hlist;$('hlist').innerHTML=fresh?s.hlist:'';document.querySelector('.card[data-id=todo]').style.display=fresh?'none':'';$('care').style.display=fresh?'none':'';if(!fresh)return;$('nb-today').textContent=$('hlist').querySelector('h2 .badge')?.textContent||'';  // 비서 케어는 '오늘 할 것'에 다 들어 있다
 
  const L=$('hlist');L.querySelector('h2')?.insertAdjacentHTML('afterend','<div class="hhint">누르면 고치기 · 옆으로 밀면 고정·삭제 · 길게 눌러 끌면 옮기기</div>');
- L.querySelectorAll('.hcb input').forEach(c=>{c.onchange=()=>{const h=c.closest('.hit'),i=+h.dataset.todo;toggleTodo(i);h.classList.toggle('hdone',c.checked);  // 번호는 누를 때 읽는다(삭제로 번호가 밀려도 맞게)
-  if(c.checked){let k=L.querySelector('.hgrp.k');if(!k){k=document.createElement('div');k.className='hgrp k';k.textContent='✓ 오늘 체크한 것';L.querySelector('form').before(k)}h.removeAttribute('data-todo');L.querySelector('form').before(h)}}});  // 체크하면 맨 아래 '오늘 체크한 것'으로
- L.querySelectorAll('.hck').forEach(b=>{const id=(b.getAttribute('onclick')||'').match(/[0-9a-f]{10}/)?.[0];b.onclick=()=>{if(id)inbox('care_ok',id);b.closest('.hit').remove()}});
- // 비서 추천 → 내 할 일로: Claude가 넣은 할 일은 표시만 떼고, 비서 제안은 새 할 일로, 비서 말은 맥에 '할 일로' 보냄
- L.querySelectorAll('.hadopt').forEach(b=>{const a=b.getAttribute('onclick')||'',n=+a.match(/,(\d+)\)/)?.[1],id=a.match(/[0-9a-f]{10}/)?.[0],h=b.closest('.hit');b.onclick=()=>{
-  const items=(S.todo?.data||[]).map(x=>({...x}));if(a.includes("'adopt'")&&items[n]){['by','src','src_cli'].forEach(k=>delete items[n][k]);save('todo',items)}
-  else if(a.includes("'apply'")){items.push({text:(h.querySelector('.ht .hm')||h.querySelector('.ht')).firstChild.nodeValue.trim(),daily:false,done:null,prio:0,due:''});save('todo',items)}else if(id)inbox('care_todo',id);
+ // 맥이 체크해 둔 줄(오늘 체크한 것)에도 번호·이름을 달아 둔다 → 폰에서 체크를 풀 수 있게
+ L.querySelectorAll('.hit.hdone:not([data-todo])').forEach(h=>{const n=(h.querySelector('input')?.getAttribute('onchange')||'').match(/\d+/)?.[0];if(n!=null){h.dataset.todo=n;h.dataset.t=h.querySelector('.ht')?.textContent.trim()||''}});
+ hFix();L.querySelectorAll('.hit[data-todo]').forEach(bindRow);
+ L.querySelectorAll('.hck').forEach(b=>{const a=b.getAttribute('onclick')||'',id=a.match(/[0-9a-f]{10}/)?.[0],h=b.closest('.hit');b.onclick=()=>{if(id)inbox('care_ok',id);else if(a.includes("'dismiss'"))inbox('sugg',JSON.stringify({op:'dismiss',text:hFull(h)}));h.remove()}});
+ // 비서 추천 → 내 할 일로: Claude가 넣은 할 일은 표시만 떼고(그 자리에서 '여유 있을 때'로), 비서 제안·비서 말은 맥에 보내 맥이 할 일로 만든다(같은 게 두 번 생기지 않게)
+ L.querySelectorAll('.hadopt').forEach(b=>{const a=b.getAttribute('onclick')||'',id=a.match(/[0-9a-f]{10}/)?.[0],h=b.closest('.hit');b.onclick=()=>{
+  if(a.includes("'adopt'")){const j=TI(+h.dataset.todo,h.dataset.t);if(j<0)return gone();adoptTodo(j);const g=L.querySelector('.hgrp[data-g="여유 있을 때"]');if(g){h.classList.remove('hb');h.dataset.g='여유 있을 때';b.remove();h.querySelector('.hsrc')?.remove();g.classList.remove('hempty');g.after(h);hBadge(1);return}}
+  else if(a.includes("'apply'"))inbox('sugg',JSON.stringify({op:'apply',text:hFull(h)}));else if(id)inbox('care_todo',id);
   h.remove();toast('내 할 일로 옮겼어요')}});
  L.querySelectorAll('.hask').forEach(b=>{b.onclick=()=>{ask(b.dataset.t);tab('chat')}});
- L.querySelectorAll('.hit[data-todo] .ht').forEach(t=>{t.removeAttribute('ondblclick');t.title='눌러서 고치기';t.onclick=()=>todoSheet(+t.closest('.hit').dataset.todo)});
  // 맥의 ✎·📅·× 버튼은 폰에선 숨김(.snap .x) — 대신 옆으로 밀면 나오는 버튼·고치기 창으로 같은 일을 한다
  L.querySelectorAll('.ht[onclick]').forEach(t=>{const id=(t.getAttribute('onclick')||'').match(/'(\w+)'/)?.[1];t.onclick=()=>goCard(id)});
  const f=L.querySelector('form');if(f){f.onsubmit=e=>{e.preventDefault();$('ti').value=$('ht').value;$('ht').value='';addTodo(e);toast('할 일에 넣었어요')};f.insertAdjacentHTML('afterend',QCH('ht'))}}
+// 한 줄에 폰 동작 달기: 체크(맨 아래 '체크한 것'으로 / 풀면 제자리 표시), 글자 누르면 고치기 창
+function bindRow(h){const L=$('hlist'),c=h.querySelector('.hcb input');
+ if(c)c.onchange=()=>{const j=TI(+h.dataset.todo,h.dataset.t);if(j<0){c.checked=!c.checked;return gone()}toggleTodo(j);h.classList.toggle('hdone',c.checked);hBadge(c.checked?-1:1);
+  if(c.checked){let k=L.querySelector('.hgrp.k');if(!k){k=document.createElement('div');k.className='hgrp k';k.textContent='✓ 오늘 체크한 것';L.querySelector('form').before(k)}L.querySelector('form').before(h)}};
+ const t=h.querySelector('.ht');if(t){t.removeAttribute('ondblclick');t.onclick=()=>{if(h.classList.contains('hdone'))return;const [i,x]=rk(h);todoSheet(i,x)}}}
+// 폰에서 넣은 할 일은 맥이 다시 보내기 전에도 '오늘 할 것'에 바로 보이게(맞는 묶음 끝에)
+function hAdd(j){const L=$('hlist'),t=S.todo?.data?.[j];if(!L.firstChild||!t)return;const d=today(),tmr=new Date(Date.now()+864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+ const g=t.due&&t.due<d?'놓친 것':(t.daily||t.due===d||t.due===tmr||(t.prio||0)>=3)?'꼭 오늘':'여유 있을 때',head=L.querySelector(`.hgrp[data-g="${g}"]`);if(!head)return;head.classList.remove('hempty');
+ let last=head;while(last.nextElementSibling?.classList.contains('hit'))last=last.nextElementSibling;
+ const r=document.createElement('div');r.className='hit';Object.assign(r.dataset,{todo:j,g,t:t.text});r.innerHTML=`<span class="hcb"><input type="checkbox"></span><div class="ht"><span class="hm">${E(t.text)}</span></div>${t.due?`<span class="hdue a">${t.due===d?'오늘':t.due===tmr?'내일':t.due.slice(5).replace('-','/')}</span>`:''}`;last.after(r);bindRow(r);hBadge(1)}
 // 할 일 추가 칸 아래 빠른 버튼: 적고 나서 '꼭 오늘·내일·여유 있을 때'를 누르면 그 묶음으로 바로 들어간다
 const QCH=src=>`<div class="qchips"><span class="muted">적고 바로:</span><button type="button" onclick="addQuick('오늘','${src}')">꼭 오늘</button><button type="button" onclick="addQuick('내일','${src}')">내일</button><button type="button" onclick="addQuick('여유','${src}')">여유 있을 때</button></div>`;
 function addQuick(w,src){const inp=$(src),v=inp.value.trim();if(!v){inp.focus();return toast('먼저 할 일을 적어 주세요')}inp.value='';$('ti').value=v+(w==='여유'?'':' @'+w);addTodo({preventDefault(){}},w==='여유');toast(w==='여유'?"'여유 있을 때'에 넣었어요":`'${w}' 마감으로 넣었어요`)}
@@ -271,18 +301,23 @@ function hMore(on){on=on??!document.documentElement.classList.contains('hmore-on
 function goCard(id){const m={mailc:'mail',occ:'oc',collab:'collab',proj:'proj',todo:'todo'};const cid=m[id]||id;tab(cid==='proj'?'proj':cid==='todo'?'today':'more');const c=document.querySelector(`.card[data-id="${cid}"]`);if(c){c.classList.remove('fold');setTimeout(()=>c.scrollIntoView({behavior:'smooth',block:'start'}),60)}}
 // 비서 탭의 대화방: 비서 + 맥에서 고른 코드 세션(맥이 1분마다·바뀔 때 올림)
 let PROOM=localStorage.getItem('proom')||'';
-function renderRooms(){const s=S.snapshot?.data||{};const rs=s.rooms||[];if(PROOM&&!rs.some(r=>r.cli===PROOM))PROOM='';
+function renderRooms(){const s=S.snapshot?.data||{};const rs=s.rooms||[];if(PROOM&&rs.length&&!rs.some(r=>r.cli===PROOM)){PROOM='';localStorage.setItem('proom','');toast('보던 세션이 맥 목록에서 빠져서 비서 대화로 돌아왔어요')}
  const st={busy:'작업 중',open:'앱에 열림',idle:'쉬는 중'};
  $('rchips').innerHTML=rs.length?`<button class="${PROOM?'':'on'}" onclick="pickRoom('')">✦ 비서</button>`+rs.map(r=>`<button class="${PROOM===r.cli?'on':''}" onclick="pickRoom('${r.cli}')"><i class="rdot ${r.state}"></i>${E(r.title)}</button>`).join(''):'';
  const r=rs.find(x=>x.cli===PROOM);$('rtitle').textContent=r?r.title:'비서';$('rstate').textContent=r?st[r.state]:'';
  const atB=$('chat').scrollHeight-$('chat').scrollTop-$('chat').clientHeight<80;
- $('chat').innerHTML=r?r.html:(s.chat||'');$('ci').placeholder=r?`「${r.title}」 세션에 말하기`:'비서에게 말하기';document.querySelector('#t-chat .quick').style.display=r?'none':'';if(atB)chatBottom()}
+ $('chat').innerHTML=r?r.html:(s.chat||'');sentShow();$('ci').placeholder=r?`「${r.title}」 세션에 말하기`:'비서에게 말하기';document.querySelector('#t-chat .quick').style.display=r?'none':'';if(atB)chatBottom()}
 function pickRoom(id){PROOM=id;localStorage.setItem('proom',id);renderRooms();chatBottom()}
 function chanBtns(){document.querySelectorAll('#hflow .hch').forEach(b=>{const k=(b.getAttribute('onclick')||'').match(/'(insta|threads|youtube|blog)'/)?.[1];if(!k)return;b.removeAttribute('onclick');b.onclick=()=>{b.classList.toggle('on');b.querySelector('b').textContent=b.classList.contains('on')?'✓':'○';inbox('chan',k)}})}
 function careBtns(){document.querySelectorAll('#care .cv').forEach(li=>{const id=(li.querySelector('.ca button')?.getAttribute('onclick')||'').match(/[0-9a-f]{10}/)?.[0];if(!id||li.querySelector('.pok'))return;const b=document.createElement('button');b.className='pok';b.textContent='알았어요';b.onclick=()=>{inbox('care_ok',id);li.remove()};li.append(b)})}
 function hh(){document.documentElement.style.setProperty('--hh',$('hdr').offsetHeight+($('stale').hidden?0:$('stale').offsetHeight+8)+'px')}
 function chatBottom(){const c=$('chat');requestAnimationFrame(()=>c.scrollTop=c.scrollHeight)}
-function ask(t){inbox('chat',t);$('chat').insertAdjacentHTML('beforeend',`<div class="msg user">${E(t)}<span class="muted">보냄 · 맥이 받으면 답해요</span></div>`);chatBottom()}
+// 보낸 말: 맥이 받아 대화에 넣기 전까지(최대 30분) 폰에 따로 들고 있다가, 맥이 대화를 새로 보내도 아래에 다시 붙인다(2026-11-01 점검: 보낸 말이 사라졌음)
+let SENT=JSON.parse(localStorage.getItem('jh_sent')||'[]');
+function sentShow(){const c=$('chat'),txt=c.textContent;SENT=SENT.filter(m=>Date.now()-m.at<18e5&&!txt.includes(m.text));localStorage.setItem('jh_sent',JSON.stringify(SENT));
+ SENT.filter(m=>m.room===PROOM).forEach(m=>c.insertAdjacentHTML('beforeend',`<div class="msg user">${E(m.text)}<span class="muted">보냄 · ${m.room?'맥이 그 세션에 전달해요':'맥이 받으면 답해요'}</span></div>`))}
+function sent(room,text){SENT.push({room,text,at:Date.now()});localStorage.setItem('jh_sent',JSON.stringify(SENT));renderRooms();chatBottom()}
+function ask(t){inbox('chat',t);sent('',t)}
 // 카드 제목을 누르면 접기/펴기 (이 기기에 기억). 처음엔 세션 기록·연락처만 접어 둔다
 const FOLD=JSON.parse(localStorage.getItem('pfold')||'["act","contacts","brief","oc","stats"]');
 if(!localStorage.getItem('pfold2')){for(const id of ['oc','stats'])if(!FOLD.includes(id))FOLD.push(id);localStorage.setItem('pfold',JSON.stringify(FOLD));localStorage.setItem('pfold2','1')}
@@ -304,8 +339,8 @@ async function boot(){let data,error;try{({data,error}=await db.from('dash_state
  const y=scrollY;for(const r of data)S[r.key]=r;render();flush();if(BOOTED){scrollTo(0,y);return}BOOTED=true;tab(localStorage.getItem('tab')||'today');
  db.channel('dash').on('postgres_changes',{event:'*',schema:'public',table:'dash_state',filter:'user_id=eq.'+UID},p=>{const r=p.new;if(!r||!r.key)return;if(S[r.key]&&r.src==='phone'&&S[r.key].updated_at>=r.updated_at)return;S[r.key]=r;render(r.key)}).subscribe(st=>{if(st!=='SUBSCRIBED'){$('conn').className='warn';$('conn').textContent='연결 중…'}else staleness()});
  setInterval(staleness,30000)}
-async function save(key,data){const row={user_id:UID,key,data,src:'phone',updated_at:new Date().toISOString()};S[key]={...row};render(key);let error;try{({error}=await db.from('dash_state').upsert(row))}catch(e){error=e}if(error){queue('row',row);toast('오프라인 — 저장해 뒀다가 연결되면 맥에 보내요')}}
-async function inbox(kind,payload){const x={user_id:UID,kind,payload};let error;try{({error}=await db.from('dash_inbox').insert(x))}catch(e){error=e}if(error){queue('inbox',x);toast('오프라인 — 연결되면 보낼게요')}else toast('보냈어요 — 맥이 켜져 있으면 곧 반영돼요')}
+async function save(key,data){const row={user_id:UID,key,data,src:'phone',updated_at:new Date().toISOString()};S[key]={...row};render(key);let error;try{({error}=await db.from('dash_state').upsert(row))}catch(e){error=e}if(error){queue('row',row);toast('오프라인 — 저장해 뒀다가 연결되면 맥에 보내요',null,1)}}
+async function inbox(kind,payload){const x={user_id:UID,kind,payload};let error;try{({error}=await db.from('dash_inbox').insert(x))}catch(e){error=e}if(error){queue('inbox',x);toast('오프라인 — 연결되면 보낼게요',null,1)}else toast('보냈어요 — 맥이 켜져 있으면 곧 반영돼요',null,1)}
 // ---- 오프라인: 마지막 화면을 폰에 저장해 두고, 바꾼 건 모아 뒀다가 연결되면 보낸다 ----
 function cacheS(){if(UID&&UID!=='test'){LS.set('jh_S',S);LS.set('jh_uid',UID)}}
 const PEND=()=>LS.get('jh_pend')||{rows:{},inbox:[]};
@@ -320,22 +355,24 @@ function netBadge(){const p=PEND(),n=Object.keys(p.rows).length+p.inbox.length;i
 addEventListener('online',()=>{toast('인터넷이 연결됐어요');flush();if(UID&&UID!=='test')boot()});addEventListener('offline',()=>{netBadge();toast('오프라인이에요 — 저장해 둔 화면으로 계속 쓸 수 있어요')});
 function staleness(){if(!navigator.onLine)return netBadge();const s=S.snapshot?.data;const st=$('stale'),c=$('conn');if(!s){st.hidden=false;st.textContent='맥에서 아직 올린 내용이 없어요';c.className='bad';c.textContent='맥 없음';hh();return}
  const age=(Date.now()-new Date(s.at))/60000;c.className=age<3?'ok':age<90?'warn':'bad';c.textContent=age<3?'실시간':age<90?`맥 ${Math.round(age)}분 전`:'맥 꺼짐';
+ if(!!$('hlist').firstChild!==(age<15&&!!s.hlist))render('snapshot');  // 맥이 15분 넘게 조용하면 '오늘 할 것'(맥 목록) 대신 폰 목록으로 바꿔 보여 준다(폰에서 넣은 것도 보이게)
  st.hidden=age<90;st.textContent=`맥 마지막 갱신 ${s.at.slice(5,16).replace('T',' ')} — 맥이 꺼져 있거나 잠든 것 같아요. 할 일·현황표·메모는 그래도 저장돼요.`;hh()}
 // ---- 렌더 ----
 function render(k){const s=S.snapshot?.data||{};if(!k||k==='snapshot'){$('head').innerHTML=s.head||'';$('hmailn').textContent=s.mailn||'';document.querySelector('.hmail').classList.toggle('on',!!s.mailn);for(const id of ['brief','mail','collab','oc','stats','act','sessions'])$(id).innerHTML=s[id]||'<p class=muted>맥에서 올린 내용 없음</p>';$('care').innerHTML=s.care||'';careBtns();for(const id of ['hai','htl','hflow','hweek'])$(id).innerHTML=s[id]||'';chanBtns();renderHList(s);renderRooms();$('pend').hidden=!s.pending;$('nb-chat').textContent=s.pending?'…':'';briefDots();staleness()}
- if(!k||k==='todo')renderTodo();if(!k||k==='projects')renderProj();if(!k||k==='todo'||k==='projects')renderDday();
+ if(!k||k==='todo'){renderTodo();if(k)hFix()}if(!k||k==='projects')renderProj();if(!k||k==='todo'||k==='projects')renderDday();
  if((!k||k==='memo')&&document.activeElement!==$('memo'))$('memo').value=S.memo?.data?.text||'';if(!k||k==='contacts')renderContacts();if(!k||k==='accounts')renderAcc();if(!k||k==='push_pub')renderPush()}
 // 계정: 맥 업무판과 같은 항목(묶음 SNS/업무·서비스·아이디·주소·메모). 비밀번호는 안 둔다. 서비스 이름 누르면 고치기 창
-function renderAcc(){const as=S.accounts?.data||[];let h='';for(const g of ['SNS','업무']){const rows=as.map((a,i)=>[a,i]).filter(([a])=>(a.group||'업무')===g);if(!rows.length)continue;
+const AG=()=>[...new Set(['SNS','업무',...(S.accounts?.data||[]).map(a=>a.group||'업무')])];  // 개인 등 다른 묶음도 빠짐없이
+function renderAcc(){const as=S.accounts?.data||[];let h='';for(const g of AG()){const rows=as.map((a,i)=>[a,i]).filter(([a])=>(a.group||'업무')===g);if(!rows.length)continue;
  h+=`<h3 class="asec">${g}</h3><table class="oc one">`+rows.map(([a,i])=>`<tr><td><div class="row"><b onclick="accSheet(${i})">${E(a.service)}</b>${a.url?`<a href="${E(a.url)}" target="_blank">${E(a.id||'열기')} ↗</a>`:`<span class="muted">${E(a.id||'')}</span>`}</div><div class="muted">${E(a.note||'')}</div></td></tr>`).join('')+'</table>'}
  $('acc').innerHTML=(h||'<p class=muted>계정 메모 없음</p>')+'<form class="inline" onsubmit="addAcc(event)"><input id="an" placeholder="서비스 추가 (아이디·주소는 눌러서)"><button class="sm">추가</button></form><p class="muted" style="margin:6px 0 0;font-size:12px">비밀번호는 저장하지 않아요 — 아이디·주소·메모만.</p>'}
-function addAcc(e){e.preventDefault();const v=$('an').value.trim();if(!v)return;save('accounts',[...(S.accounts?.data||[]),{group:'업무',service:v,id:'',url:'',note:''}]);toast('넣었어요 — 서비스 이름을 누르면 아이디·주소를 적을 수 있어요')}
-function accSheet(i){const a=(S.accounts?.data||[])[i];if(!a)return;const w=document.createElement('div');w.className='tsh';const F=[['service','서비스'],['id','아이디'],['url','주소 (https://…)'],['note','메모']];let grp=a.group||'업무';
- w.innerHTML=`<div>${F.map(([k,l])=>`<b>${l}</b><input data-k="${k}" value="${E(a[k]||'')}">`).join('')}<b>묶음</b><div class="grp">${['SNS','업무'].map(g=>`<button data-g="${g}" class="${grp===g?'on':''}">${g}</button>`).join('')}</div><div class="tr"><button class="del">삭제</button><button class="no">닫기</button><button class="pri">저장</button></div></div>`;
+function addAcc(e){e.preventDefault();const v=$('an').value.trim();if(!v)return;$('an').value='';save('accounts',[...(S.accounts?.data||[]),{group:'업무',service:v,id:'',url:'',note:''}]);toast('넣었어요 — 서비스 이름을 누르면 아이디·주소를 적을 수 있어요')}
+function accSheet(i){const a=(S.accounts?.data||[])[i];if(!a)return;const key=a.service,J=()=>RI(S.accounts?.data||[],i,key,'service');const w=document.createElement('div');w.className='tsh';const F=[['service','서비스'],['id','아이디'],['url','주소 (https://…)'],['note','메모']];let grp=a.group||'업무';
+ w.innerHTML=`<div>${F.map(([k,l])=>`<b>${l}</b><input data-k="${k}" value="${E(a[k]||'')}">`).join('')}<b>묶음</b><div class="grp">${AG().map(g=>`<button data-g="${g}" class="${grp===g?'on':''}">${g}</button>`).join('')}</div><div class="tr"><button class="del">삭제</button><button class="no">닫기</button><button class="pri">저장</button></div></div>`;
  const close=()=>w.remove();w.onclick=e=>{if(e.target===w)close()};w.querySelector('.no').onclick=close;
  w.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{grp=b.dataset.g;w.querySelectorAll('[data-g]').forEach(x=>x.classList.toggle('on',x===b))});
- w.querySelector('.del').onclick=()=>{const prev=S.accounts?.data||[],as=[...prev];as.splice(i,1);close();save('accounts',as);toast(`'${a.service}' 지웠어요`,()=>save('accounts',prev))};
- w.querySelector('.pri').onclick=()=>{const as=(S.accounts?.data||[]).map(x=>({...x}));w.querySelectorAll('[data-k]').forEach(inp=>as[i][inp.dataset.k]=inp.value.trim());as[i].group=grp;if(!as[i].service)return;close();save('accounts',as);toast('고쳤어요')};
+ w.querySelector('.del').onclick=()=>{const j=J();close();if(j<0)return gone();const as=[...(S.accounts?.data||[])],[it]=as.splice(j,1);save('accounts',as);toast(`'${a.service}' 지웠어요`,()=>{const c=[...(S.accounts?.data||[])];c.splice(Math.min(j,c.length),0,it);save('accounts',c)})};
+ w.querySelector('.pri').onclick=()=>{const j=J();if(j<0){close();return gone()}const as=(S.accounts?.data||[]).map(x=>({...x}));w.querySelectorAll('[data-k]').forEach(inp=>as[j][inp.dataset.k]=inp.value.trim());as[j].group=grp;if(!as[j].service)return;close();save('accounts',as);toast('고쳤어요')};
  document.body.appendChild(w)}
 // 폰 알림(웹 푸시): 맥이 올린 공개키(dash_state push_pub)로 구독하고, 구독 정보는 inbox 'push'로 맥에 보낸다. 맥이 아침 8시에 보냄
 const b64u=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((s.length+3)%4)),c=>c.charCodeAt(0));
@@ -356,78 +393,84 @@ function renderTodo(){const items=S.todo?.data||[];const d=today();let left=0,h=
  const sec=({t,done})=>done?4:t.by?3:t.due&&t.due<d?0:(t.daily||t.due===d||t.due===tmr||(t.prio||0)>=3)?1:2;vis.sort((a,b)=>sec(a)-sec(b));
  let cur=-1;vis.forEach(({t,i,done})=>{if(!done&&!t.by)left++;const c=sec({t,done});if(c!==cur){h+=`<li class="tsec ${c===4?'k':c===3?'':'m'}">${GN[c]}${c===3?'<small>Claude가 넣은 것</small>':''}</li>`}cur=c;
  const due=t.due?`<span class="pill ${t.due<d&&!done?'red':t.due===d?'':'gray'}">${t.due===d?'오늘':t.due.slice(5).replace('-','/')}</span>`:'';
- h+=`<li class="${done?'done':''}" data-i="${i}"><label><input type="checkbox" ${done?'checked':''} onchange="toggleTodo(${i})"><span onclick="event.preventDefault();todoSheet(${i})">${E(t.text)}${t.by?`<small class="hsrc">· ${E(t.src||'Claude')}</small>`:''}</span></label>${t.by&&!done?`<button class="hadopt" onclick="adoptTodo(${i})">내 할 일로</button>`:''}${due}${t.daily?`<span class="tag">${t.daily==='weekly'?'매주':'매일'}</span>`:''}</li>`});  // ✎·× 버튼 대신 '오늘 할 것'과 같게: 누르면 고치기, 옆으로 밀면 고정·삭제
+ h+=`<li class="${done?'done':''}" data-i="${i}" data-t="${E(t.text)}"><label><input type="checkbox" ${done?'checked':''} onchange="toggleTodo(${i})"><span onclick="event.preventDefault();todoSheet(${i})">${E(t.text)}${t.by?`<small class="hsrc">· ${E(t.src||'Claude')}</small>`:''}</span></label>${t.by&&!done?`<button class="hadopt" onclick="adoptTodo(${i})">내 할 일로</button>`:''}${due}${t.daily?`<span class="tag">${t.daily==='weekly'?'매주':'매일'}</span>`:''}</li>`});  // ✎·× 버튼 대신 '오늘 할 것'과 같게: 누르면 고치기, 옆으로 밀면 고정·삭제
  $('todo').innerHTML=h||'<li class=muted>할 일 없음</li>';$('todobadge').textContent=left;$('todobadge').className='badge'+(left?'':' zero');$('nb-today').textContent=(document.querySelector('#hlist h2 .badge')?.textContent||left)||'';
  // 체크해서 화면에서 사라진 것(오늘 전에 끝낸, 매일 할 일 제외) 모아보기
  const hid=items.map((t,i)=>({t,i})).filter(({t})=>!t.daily&&t.done&&t.done!==d).sort((a,b)=>(b.t.done||'').localeCompare(a.t.done||''));
  $('tdone').innerHTML=hid.length?`<details class="trash"><summary class="muted">체크한 할 일 모아보기 ${hid.length}</summary><ul class="list">${hid.map(({t,i})=>`<li><span class="muted">${(t.done||'').slice(5).replace('-','/')}</span> ${E(t.text)} <button class="sm ghost" onclick="toggleTodo(${i})">되돌리기</button></li>`).join('')}</ul></details>`:''}
 // 할 일 고치기: 글자를 누르면 아래에서 올라오는 창 — 이름·마감·묶음(꼭 오늘/여유 있을 때)·고정, 삭제
-function todoSheet(i){const t=(S.todo?.data||[])[i];if(!t)return;const w=document.createElement('div');w.className='tsh';const pin=(t.prio||0)>=3;
- w.innerHTML=`<div><b>할 일 고치기</b><input id="tsT" value="${E(t.text)}"><b>마감 (비우면 없음)</b><input id="tsD" type="date" value="${t.due||''}"><b>묶음</b><div class="grp"><button data-g="꼭 오늘">꼭 오늘</button><button data-g="여유 있을 때">여유 있을 때</button><button class="pn${pin?' on':''}">📌 ${pin?'고정됨':'고정'}</button></div><div class="tr"><button class="del">삭제</button><button class="no">닫기</button><button class="pri">저장</button></div></div>`;
- const close=()=>w.remove();w.onclick=e=>{if(e.target===w)close()};w.querySelector('.no').onclick=close;
- w.querySelector('.del').onclick=()=>{close();delTodo(i)};
- w.querySelector('.pn').onclick=()=>{close();pinTodo(i)};
- w.querySelectorAll('.grp [data-g]').forEach(b=>b.onclick=()=>{const items=(S.todo?.data||[]).map(x=>({...x}));regroup(items[i],b.dataset.g);close();save('todo',items);toast(`'${b.dataset.g}'(으)로 옮겼어요`)});
- w.querySelector('.pri').onclick=()=>{const v=w.querySelector('#tsT').value.trim();if(!v)return;const items=(S.todo?.data||[]).map(x=>({...x}));items[i].text=v;items[i].due=w.querySelector('#tsD').value||null;close();save('todo',items);
-  hPatch(i,r=>{(r.querySelector('.ht .hm')||r.querySelector('.ht')).firstChild.nodeValue=v;r.dataset.t=v});toast('고쳤어요')};
+function todoSheet(i,key){i=TI(i,key);const t=(S.todo?.data||[])[i];if(!t)return gone();key=t.text;const w=document.createElement('div');w.className='tsh';const pin=(t.prio||0)>=3,d=today(),tmr=new Date(Date.now()+864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10),
+  cg=(t.daily||t.due&&t.due<=tmr||pin)?'꼭 오늘':'여유 있을 때';  // 지금 어느 묶음인지 표시
+ w.innerHTML=`<div><b>할 일 고치기</b><input id="tsT" value="${E(t.text)}"><b>마감 (비우면 없음)</b><input id="tsD" type="date" value="${t.due||''}"><b>묶음</b><div class="grp"><button data-g="꼭 오늘" class="${cg==='꼭 오늘'?'on':''}">꼭 오늘</button><button data-g="여유 있을 때" class="${cg==='여유 있을 때'?'on':''}">여유 있을 때</button><button class="pn${pin?' on':''}">📌 ${pin?'고정됨':'고정'}</button></div><div class="tr"><button class="del">삭제</button><button class="no">닫기</button><button class="pri">저장</button></div></div>`;
+ const close=()=>w.remove(),J=()=>TI(i,key);w.onclick=e=>{if(e.target===w)close()};w.querySelector('.no').onclick=close;  // 창이 열린 사이 목록이 바뀌어도 이름으로 다시 찾는다
+ w.querySelector('.del').onclick=()=>{close();delTodo(i,key)};
+ w.querySelector('.pn').onclick=()=>{close();pinTodo(i,key)};
+ w.querySelectorAll('.grp [data-g]').forEach(b=>b.onclick=()=>{const j=J();close();if(j<0)return gone();const items=(S.todo?.data||[]).map(x=>({...x}));regroup(items[j],b.dataset.g);save('todo',items);toast(`'${b.dataset.g}'(으)로 옮겼어요`)});
+ w.querySelector('.pri').onclick=()=>{const v=w.querySelector('#tsT').value.trim();if(!v)return;const j=J();close();if(j<0)return gone();const items=(S.todo?.data||[]).map(x=>({...x}));items[j].text=v;items[j].due=w.querySelector('#tsD').value||null;
+  hPatch(j,r=>{const m=r.querySelector('.ht .hm')||r.querySelector('.ht'),n=[...m.childNodes].find(x=>x.nodeType===3);if(n)n.nodeValue=v;r.dataset.t=v});save('todo',items);toast('고쳤어요')};
  document.body.appendChild(w)}
 // 맥에서 받은 '오늘 할 것' HTML은 맥이 다시 보낼 때(몇 초 뒤)까지 안 바뀌므로, 그 사이엔 줄을 직접 고쳐 둔다
 function hPatch(i,fn){const r=document.querySelector(`#hlist .hit[data-todo="${i}"]`);if(r)fn(r)}
-function pinTodo(i){const items=(S.todo?.data||[]).map(x=>({...x})),t=items[i];if(!t)return;const on=(t.prio||0)<3;t.prio=on?3:0;if(on){delete t.later;['by','src','src_cli'].forEach(k=>delete t[k])}save('todo',items);
+function pinTodo(i,key){i=TI(i,key);if(i<0)return gone();const items=(S.todo?.data||[]).map(x=>({...x})),t=items[i];const on=(t.prio||0)<3;t.prio=on?3:0;if(on){delete t.later;['by','src','src_cli'].forEach(k=>delete t[k])}save('todo',items);
  hPatch(i,r=>{r.querySelector('.hpin')?.remove();if(on)(r.querySelector('.ht .hm')||r.querySelector('.ht')).insertAdjacentHTML('afterbegin','<span class="hpin">📌</span>')});toast(on?'고정했어요 — 꼭 오늘에 계속 있어요':'고정을 풀었어요')}
-function adoptTodo(i){const items=(S.todo?.data||[]).map(x=>({...x}));['by','src','src_cli'].forEach(k=>delete items[i][k]);save('todo',items);toast('내 할 일로 옮겼어요')}
-function toggleTodo(i){const items=[...(S.todo?.data||[])];const t=items[i];t.done=todoDone(t)?null:today();save('todo',items)}
-function delTodo(i){const prev=S.todo?.data||[],items=[...prev];items.splice(i,1);save('todo',items);
- const rows=[...document.querySelectorAll('#hlist .hit[data-todo]')],r=rows.find(x=>+x.dataset.todo===i),nxt=r?.nextSibling,par=r?.parentNode;rows.forEach(x=>{const k=+x.dataset.todo;if(k===i)x.remove();else if(k>i)x.dataset.todo=k-1});  // 뒤 줄 번호를 하나씩 당겨 둔다
- toast('지웠어요',()=>{save('todo',prev);document.querySelectorAll('#hlist .hit[data-todo]').forEach(x=>{const k=+x.dataset.todo;if(k>=i)x.dataset.todo=k+1});if(r)par.insertBefore(r,nxt)})}
-function addTodo(e,later){e.preventDefault();let text=$('ti').value.trim();if(!text)return;let prio=0,due='';const m=text.match(/(!{1,3})/);if(m){prio=m[1].length;text=text.replace(m[1],'')}
+function adoptTodo(i,key){i=TI(i,key);if(i<0)return gone();const items=(S.todo?.data||[]).map(x=>({...x}));['by','src','src_cli'].forEach(k=>delete items[i][k]);save('todo',items);toast('내 할 일로 옮겼어요')}
+function toggleTodo(i,key){i=TI(i,key);if(i<0)return gone();const items=(S.todo?.data||[]).map(x=>({...x}));const t=items[i];t.done=todoDone(t)?null:today();save('todo',items)}
+// 지우기 → 되돌리기: 지운 그 항목만 그 자리에 다시 끼운다(그 사이 다른 변경은 살림). 줄 번호는 hFix가 이름으로 다시 맞춘다
+function delTodo(i,key){i=TI(i,key);if(i<0)return gone();const items=(S.todo?.data||[]).map(x=>({...x})),[it]=items.splice(i,1);
+ const r=document.querySelector(`#hlist .hit[data-todo="${i}"]`),nxt=r?.nextSibling,par=r?.parentNode;r?.remove();save('todo',items);
+ toast('지웠어요',()=>{const cur=(S.todo?.data||[]).map(x=>({...x}));const at=Math.min(i,cur.length);cur.splice(at,0,it);const live=r&&par&&document.contains(par);if(live)par.insertBefore(r,nxt?.parentNode===par?nxt:null);save('todo',cur);if(!live)hAdd(at)})}
+function addTodo(e,later){const fresh=!!$('hlist').firstChild;e.preventDefault();let text=$('ti').value.trim();if(!text)return;let prio=0,due='';const m=text.match(/(!{1,3})/);if(m){prio=m[1].length;text=text.replace(m[1],'')}
  const dm=text.match(/@(오늘|내일|모레|\d{1,2}\/\d{1,2})/);if(dm){const d=new Date();const w=dm[1];if(w==='내일')d.setDate(d.getDate()+1);if(w==='모레')d.setDate(d.getDate()+2);if(w.includes('/')){const [mo,da]=w.split('/');d.setMonth(+mo-1,+da)}due=new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);text=text.replace(dm[0],'')}
- const items=[...(S.todo?.data||[]),{text:text.replace(/\s+/g,' ').trim(),daily:false,done:null,prio,due,...(later?{later:true}:{})}];$('ti').value='';save('todo',items)}
+ const items=[...(S.todo?.data||[]),{text:text.replace(/\s+/g,' ').trim(),daily:false,done:null,prio,due,...(later?{later:true}:{})}];$('ti').value='';save('todo',items);if(fresh)hAdd(items.length-1)}
 function pstate(p){const steps=p.steps||[];const done=steps.filter(s=>s.done).length;const cur=steps.find(s=>!s.done);const idle=Math.floor((Date.now()-new Date(p.updated||p.created))/864e5);return {done,n:steps.length,cur,idle}}
 // 현황표: 제목 누르면 고치기 창(제목·마감·메모·앞뒤 순서·보류/완료/삭제), 단계는 누르면 완료 토글·옆으로 밀면 이름/삭제·길게 눌러 끌면 순서
 function renderProj(){const ps=S.projects?.data||[];let h='',n=0;ps.forEach((p,i)=>{if(p.status!=='active')return;n++;const {done,n:tot,cur,idle}=pstate(p);const rem=p.steps.map((s,k)=>[s,k]).filter(([s])=>!s.done);
  h+=`<div class="proj ${idle>=3?'stalled':''}" data-p="${i}"><div class="row"><b onclick="projSheet(${i})" title="눌러서 고치기">${E(p.title)}</b>${idle>=3?`<span class="pill red">멈춤 ${idle}일</span>`:''}${p.due?`<span class="pill ${p.due<today()?'red':'gray'}">~${p.due.slice(5).replace('-','/')}</span>`:''}${tot?`<span class="muted">${done}/${tot}</span>`:''}</div>${tot?`<div class="bar"><i style="width:${done/tot*100}%"></i></div>`:''}
  <ol class="steps">${rem.slice(0,4).map(([s,k],j)=>`<li class="${j?'':'cur'}" data-k="${k}" onclick="stepToggle(${i},${k})"><span class="chk">${k+1}</span><span>${E(s.name)}</span></li>`).join('')}${rem.length>4?`<li class="muted">… 그 뒤 ${rem.length-4}단계</li>`:''}</ol>
- ${cur?`<div class="row"><button class="sm" onclick="nextStep(${i})">현재 단계 끝</button><button class="sm ghost" onclick="addSteps(${i})">단계 추가</button><button class="sm ghost" onclick="inbox('chat','${E(p.title)} — 다음 단계 ${E(cur.name)} 진행해줘')">비서에게</button></div>`:tot?`<div class="row"><span class="muted">모든 단계 완료</span><button class="sm" onclick="projStatus(${i},'done')">완료로 넘기기</button></div>`:`<div class="muted">단계가 아직 없어요 — 단계를 넣어야 진행이 보여요</div><div class="row"><button class="sm" onclick="addSteps(${i})">단계 추가</button><button class="sm ghost" onclick="inbox('chat','${E(p.title)} — 단계 3~6개로 나눠서 현황표에 넣어줘')">비서에게 단계 정해 달라기</button></div>`}
+ ${cur?`<div class="row"><button class="sm" onclick="nextStep(${i})">현재 단계 끝</button><button class="sm ghost" onclick="addSteps(${i})">단계 추가</button><button class="sm ghost" onclick="pAsk(${i},'next')">비서에게</button></div>`:tot?`<div class="row"><span class="muted">모든 단계 완료</span><button class="sm" onclick="projStatus(${i},'done')">완료로 넘기기</button></div>`:`<div class="muted">단계가 아직 없어요 — 단계를 넣어야 진행이 보여요</div><div class="row"><button class="sm" onclick="addSteps(${i})">단계 추가</button><button class="sm ghost" onclick="pAsk(${i},'steps')">비서에게 단계 정해 달라기</button></div>`}
  <details><summary class="muted">${tot?`전체 ${tot}단계`:'메모'}${p.note?' · '+E(p.note.slice(0,40)):''}</summary><ol class="steps all">${p.steps.map((s,k)=>`<li class="${s.done?'ok':(cur&&cur.name===s.name?'cur':'')}" data-k="${k}" onclick="stepToggle(${i},${k})"><span class="chk">${s.done?'✓':k+1}</span><span>${E(s.name)}</span>${s.done?`<span class="muted">${s.done.slice(5)}</span>`:''}</li>`).join('')}</ol><div class="muted">${E(p.note||'')}</div></details></div>`});
  const rest=st=>ps.map((p,i)=>[p,i]).filter(([p])=>p.status===st);const lst=(st,lab)=>rest(st).length?`<details><summary class="muted">${lab} ${rest(st).length}</summary><ul class="list">${rest(st).map(([p,i])=>`<li class="row"><b onclick="projSheet(${i})">${E(p.title)}</b><span class="muted">${(p.updated||'').slice(5,10).replace('-','/')}</span><button class="sm ghost" onclick="projStatus(${i},'active')">다시 진행</button></li>`).join('')}</ul></details>`:'';
  $('projects').innerHTML=`<div class="hhint">제목 누르면 고치기 · 단계는 누르면 완료, 옆으로 밀면 이름·삭제, 길게 눌러 끌면 순서</div><form class="inline" onsubmit="addProj(event)"><input id="pi" placeholder="새 일 시작 (제목)"><button class="sm">추가</button></form>`+(h||'<p class=muted>진행 중인 일이 없어요. 위에 제목을 넣거나 비서에게 새 일을 시작하라고 하면 여기 생겨요.</p>')+lst('hold','보류')+lst('done','완료');$('projbadge').textContent=n}
 const PS=()=>JSON.parse(JSON.stringify(S.projects?.data||[])),pstamp=p=>{p.updated=new Date().toISOString().slice(0,19)};
-function addProj(e){e.preventDefault();const v=$('pi').value.trim();if(!v)return;const ps=PS();ps.unshift({title:v,template:'직접 입력',status:'active',note:'',due:'',created:today(),updated:new Date().toISOString().slice(0,19),steps:[]});save('projects',ps);toast('새 일을 넣었어요 — 단계를 넣어야 진행이 보여요')}
-function projStatus(i,st){const ps=PS();ps[i].status=st;pstamp(ps[i]);save('projects',ps);toast({active:'다시 진행해요',hold:'보류했어요',done:'완료로 넘겼어요'}[st])}
-function projSheet(i){const p=(S.projects?.data||[])[i];if(!p)return;const w=document.createElement('div');w.className='tsh';
+function pAsk(i,k){const p=(S.projects?.data||[])[i];if(!p)return;const cur=(p.steps||[]).find(s=>!s.done);inbox('chat',k==='next'?`${p.title} — 다음 단계 ${cur?.name||''} 진행해줘`:`${p.title} — 단계 3~6개로 나눠서 현황표에 넣어줘`)}
+const PJ=(i,title)=>RI(S.projects?.data||[],i,title,'title');  // 창이 열린 사이 현황표가 바뀌어도 제목으로 다시 찾기
+function addProj(e){e.preventDefault();const v=$('pi').value.trim();if(!v)return;$('pi').value='';const ps=PS();ps.unshift({title:v,template:'직접 입력',status:'active',note:'',due:'',created:today(),updated:new Date().toISOString().slice(0,19),steps:[]});save('projects',ps);toast('새 일을 넣었어요 — 단계를 넣어야 진행이 보여요')}
+function projStatus(i,st,title){if(title!=null)i=PJ(i,title);if(i<0)return gone();const ps=PS(),was=ps[i].status;ps[i].status=st;pstamp(ps[i]);const t0=ps[i].title;save('projects',ps);toast({active:'다시 진행해요',hold:'보류했어요',done:'완료로 넘겼어요'}[st],()=>projStatus(i,was,t0))}
+function projSheet(i){const p=(S.projects?.data||[])[i];if(!p)return;const key=p.title,J=()=>PJ(i,key);const w=document.createElement('div');w.className='tsh';
  w.innerHTML=`<div><b>일 고치기</b><input id="psT" value="${E(p.title)}"><b>마감 (비우면 없음)</b><input id="psD" type="date" value="${p.due||''}"><b>메모</b><textarea id="psN" rows="2">${E(p.note||'')}</textarea><b>순서·상태</b><div class="grp"><button data-mv="-1">↑ 앞으로</button><button data-mv="1">↓ 뒤로</button>${p.status==='active'?'<button data-st="hold">보류</button><button data-st="done">완료</button>':'<button data-st="active">다시 진행</button>'}</div><div class="tr"><button class="del">삭제</button><button class="no">닫기</button><button class="pri">저장</button></div></div>`;
  const close=()=>w.remove();w.onclick=e=>{if(e.target===w)close()};w.querySelector('.no').onclick=close;
- w.querySelector('.del').onclick=()=>{const prev=S.projects?.data||[],ps=PS();ps.splice(i,1);close();save('projects',ps);toast(`'${p.title.slice(0,14)}' 지웠어요`,()=>save('projects',prev))};
- w.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{close();projStatus(i,b.dataset.st)});
- w.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>{const ps=PS(),j=i+ +b.dataset.mv;if(j<0||j>=ps.length)return;[ps[i],ps[j]]=[ps[j],ps[i]];close();save('projects',ps);toast('순서를 바꿨어요')});
- w.querySelector('.pri').onclick=()=>{const v=w.querySelector('#psT').value.trim();if(!v)return;const ps=PS();Object.assign(ps[i],{title:v,due:w.querySelector('#psD').value||'',note:w.querySelector('#psN').value.trim()});pstamp(ps[i]);close();save('projects',ps);toast('고쳤어요')};
+ w.querySelector('.del').onclick=()=>{const j=J();close();if(j<0)return gone();const ps=PS(),[it]=ps.splice(j,1);save('projects',ps);toast(`'${p.title.slice(0,14)}' 지웠어요`,()=>{const c=PS();c.splice(Math.min(j,c.length),0,it);save('projects',c)})};
+ w.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{close();projStatus(i,b.dataset.st,key)});
+ // ↑↓는 같은 상태(진행 중끼리·보류끼리)에서만 자리를 바꾼다 — 안 보이는 완료·보류 항목과 바뀌어 아무 변화 없던 것
+ w.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>{const j=J();if(j<0){close();return gone()}const ps=PS(),d=+b.dataset.mv;let k=j+d;while(k>=0&&k<ps.length&&ps[k].status!==ps[j].status)k+=d;if(k<0||k>=ps.length)return toast(d<0?'이미 맨 위예요':'이미 맨 아래예요');[ps[j],ps[k]]=[ps[k],ps[j]];close();save('projects',ps);toast('순서를 바꿨어요')});
+ w.querySelector('.pri').onclick=()=>{const v=w.querySelector('#psT').value.trim();if(!v)return;const j=J();close();if(j<0)return gone();const ps=PS();Object.assign(ps[j],{title:v,due:w.querySelector('#psD').value||'',note:w.querySelector('#psN').value.trim()});pstamp(ps[j]);save('projects',ps);toast('고쳤어요')};
  document.body.appendChild(w)}
-function stepSheet(i,k){const p=(S.projects?.data||[])[i],s=p?.steps[k];if(!s)return;const w=document.createElement('div');w.className='tsh';
+function stepSheet(i,k){const p=(S.projects?.data||[])[i],s=p?.steps[k];if(!s)return;const pk=p.title,sk=s.name,J=()=>{const a=PJ(i,pk);return a<0?[-1,-1]:[a,RI(S.projects.data[a].steps,k,sk,'name')]};const w=document.createElement('div');w.className='tsh';
  w.innerHTML=`<div><b>단계 고치기 · ${E(p.title)}</b><input id="ssT" value="${E(s.name)}"><div class="tr"><button class="del">삭제</button><button class="no">닫기</button><button class="pri">저장</button></div></div>`;
  const close=()=>w.remove();w.onclick=e=>{if(e.target===w)close()};w.querySelector('.no').onclick=close;
- w.querySelector('.del').onclick=()=>{close();stepDel(i,k)};
- w.querySelector('.pri').onclick=()=>{const v=w.querySelector('#ssT').value.trim();if(!v)return;const ps=PS();ps[i].steps[k].name=v;pstamp(ps[i]);close();save('projects',ps);toast('고쳤어요')};
+ w.querySelector('.del').onclick=()=>{close();const [a,b]=J();if(b<0)return gone();stepDel(a,b)};
+ w.querySelector('.pri').onclick=()=>{const v=w.querySelector('#ssT').value.trim();if(!v)return;const [a,b]=J();close();if(b<0)return gone();const ps=PS();ps[a].steps[b].name=v;pstamp(ps[a]);save('projects',ps);toast('고쳤어요')};
  document.body.appendChild(w)}
 function stepOrder(i,ks){const ps=PS(),st=ps[i].steps;const slots=[...ks].sort((a,b)=>a-b),picked=ks.map(k=>st[k]);slots.forEach((p,j)=>st[p]=picked[j]);pstamp(ps[i]);save('projects',ps);toast('단계 순서를 바꿨어요')}
-function stepToggle(i,k){const ps=JSON.parse(JSON.stringify(S.projects?.data||[]));const s=ps[i].steps[k];s.done=s.done?null:today();ps[i].updated=new Date().toISOString().slice(0,19);if(ps[i].steps.every(x=>x.done))ps[i].status='done';save('projects',ps);toast(s.done?'단계 완료':'완료 취소')}
-function addSteps(i){const v=prompt('단계 이름을 쉼표로 나눠 적어 주세요 (예: 원본 확인, 컷, 자막, 업로드)');if(!v||!v.trim())return;const ps=JSON.parse(JSON.stringify(S.projects?.data||[]));ps[i].steps=[...(ps[i].steps||[]),...v.split(',').map(x=>x.trim()).filter(Boolean).map(name=>({name,done:null}))];ps[i].updated=new Date().toISOString().slice(0,19);save('projects',ps);toast('단계를 넣었어요')}
-function nextStep(i){const ps=JSON.parse(JSON.stringify(S.projects?.data||[]));const s=ps[i].steps.find(x=>!x.done);if(!s)return;s.done=today();ps[i].updated=new Date().toISOString().slice(0,19);if(ps[i].steps.every(x=>x.done))ps[i].status='done';save('projects',ps);toast('현재 단계를 끝냈어요')}
+function stepToggle(i,k){const ps=JSON.parse(JSON.stringify(S.projects?.data||[]));const s=ps[i].steps[k],old=s.done;s.done=s.done?null:today();ps[i].updated=new Date().toISOString().slice(0,19);const was=ps[i].status;if(ps[i].steps.every(x=>x.done))ps[i].status='done';save('projects',ps);toast(s.done?(ps[i].status==='done'?'마지막 단계 — 완료로 넘겼어요':'단계 완료'):'완료 취소',()=>{const c=PS();if(!c[i]?.steps[k])return;c[i].steps[k].done=old;c[i].status=was;save('projects',c)})}
+function addSteps(i){const key=S.projects?.data?.[i]?.title;askText('단계 추가 — 여러 개는 쉼표로','예: 원본 확인, 컷, 자막, 업로드',v=>{i=PJ(i,key);if(i<0)return gone();const ps=JSON.parse(JSON.stringify(S.projects?.data||[]));ps[i].steps=[...(ps[i].steps||[]),...v.split(',').map(x=>x.trim()).filter(Boolean).map(name=>({name,done:null}))];ps[i].updated=new Date().toISOString().slice(0,19);save('projects',ps);toast('단계를 넣었어요')})}
+function nextStep(i){const ps=JSON.parse(JSON.stringify(S.projects?.data||[]));const k=ps[i].steps.findIndex(x=>!x.done);if(k<0)return;stepToggle(i,k)}
 function renderDday(){const d=today();const items=[];(S.todo?.data||[]).forEach(t=>{if(t.due&&!todoDone(t))items.push([t.due,t.text])});(S.projects?.data||[]).forEach(p=>{if(p.due&&p.status==='active')items.push([p.due,p.title+' (현황표)'])});
  items.sort();$('dday').innerHTML=items.length?'<h3 class="muted" style="font-size:13px;margin:12px 0 4px">마감</h3><ul class="list">'+items.map(([due,t])=>{const n=Math.round((new Date(due)-new Date(d))/864e5);return `<li><span class="pill ${n<0?'red':n<=2?'':'gray'}">${n<0?'D+'+(-n):n===0?'D-day':'D-'+n}</span> ${E(t)}</li>`}).join('')+'</ul>':''}
 // 연락처: 이름 누르면 고치기 창(이름·소속·역할·연락처·메모·삭제), 아래 칸으로 추가 — 맥의 contact_add/edit/del과 같은 항목
 // 연락처 칸: 전화번호면 누르면 바로 전화, 카톡 링크면 카톡, 메일이면 메일
-const clink=v=>!v?'':/^https?:/.test(v)?`<a href="${E(v)}" target="_blank">${/kakao/i.test(v)?'💬 카톡 열기':'열기'}</a>`:/@/.test(v)?`<a href="mailto:${E(v)}">${E(v)}</a>`:/^[\d\s\-+()]{7,}$/.test(v)?`<a href="tel:${E(v.replace(/[^\d+]/g,''))}">📞 ${E(v)}</a>`:E(v);
+const clink1=v=>!v?'':/^https?:/.test(v)?`<a href="${E(v)}" target="_blank">${/kakao/i.test(v)?'💬 카톡 열기':'열기'}</a>`:/@/.test(v)?`<a href="mailto:${E(v)}">${E(v)}</a>`:/^[\d\s\-+()]{7,}$/.test(v)?`<a href="tel:${E(v.replace(/[^\d+]/g,''))}">📞 ${E(v)}</a>`:E(v);
+const clink=v=>(v||'').split(/\s+\/\s+|,\s+|\n/).map(x=>clink1(x.trim())).join('<br>');  // '메일 / 전화 / 주소'처럼 여러 개면 하나씩 누를 수 있게
 function renderContacts(){const cs=S.contacts?.data||[];$('contacts').innerHTML='<table class="oc one">'+cs.map((c,i)=>`<tr><td><div class="row"><b onclick="contactSheet(${i})">${E(c.name)}</b><span class="muted">${E(c.org||'')}${c.role?' · '+E(c.role):''}</span></div>${c.contact?`<div>${clink(c.contact)}</div>`:''}${c.note?`<div class="muted">${E(c.note)}</div>`:''}</td></tr>`).join('')+'</table>'+(cs.length?'':'<p class=muted>연락처 없음</p>')+'<form class="inline" onsubmit="addContact(event)"><input id="cn" placeholder="이름 추가 (소속·연락처는 눌러서)"><button class="sm">추가</button></form>'}
-function addContact(e){e.preventDefault();const v=$('cn').value.trim();if(!v)return;const cs=[...(S.contacts?.data||[]),{name:v,org:'',role:'',channel:'',contact:'',note:'',last:''}];save('contacts',cs);toast('넣었어요 — 이름을 누르면 소속·연락처를 적을 수 있어요')}
-function contactSheet(i){const c=(S.contacts?.data||[])[i];if(!c)return;const w=document.createElement('div');w.className='tsh';const F=[['name','이름'],['org','소속'],['role','역할'],['contact','연락처 (전화·메일·링크)'],['note','메모']];
+function addContact(e){e.preventDefault();const v=$('cn').value.trim();if(!v)return;$('cn').value='';const cs=[...(S.contacts?.data||[]),{name:v,org:'',role:'',channel:'',contact:'',note:'',last:''}];save('contacts',cs);toast('넣었어요 — 이름을 누르면 소속·연락처를 적을 수 있어요')}
+function contactSheet(i){const c=(S.contacts?.data||[])[i];if(!c)return;const key=c.name,J=()=>RI(S.contacts?.data||[],i,key,'name');const w=document.createElement('div');w.className='tsh';const F=[['name','이름'],['org','소속'],['role','역할'],['contact','연락처 (전화·메일·링크)'],['note','메모']];
  w.innerHTML=`<div>${F.map(([k,l])=>`<b>${l}</b><input data-k="${k}" value="${E(c[k]||'')}">`).join('')}<div class="tr"><button class="del">삭제</button><button class="no">닫기</button><button class="pri">저장</button></div></div>`;
  const close=()=>w.remove();w.onclick=e=>{if(e.target===w)close()};w.querySelector('.no').onclick=close;
- w.querySelector('.del').onclick=()=>{const prev=S.contacts?.data||[],cs=[...prev];cs.splice(i,1);close();save('contacts',cs);toast(`'${c.name}' 지웠어요`,()=>save('contacts',prev))};
- w.querySelector('.pri').onclick=()=>{const cs=(S.contacts?.data||[]).map(x=>({...x}));w.querySelectorAll('[data-k]').forEach(inp=>cs[i][inp.dataset.k]=inp.value.trim());if(!cs[i].name)return;close();save('contacts',cs);toast('고쳤어요')};
+ w.querySelector('.del').onclick=()=>{const j=J();close();if(j<0)return gone();const cs=[...(S.contacts?.data||[])],[it]=cs.splice(j,1);save('contacts',cs);toast(`'${c.name}' 지웠어요`,()=>{const x=[...(S.contacts?.data||[])];x.splice(Math.min(j,x.length),0,it);save('contacts',x)})};
+ w.querySelector('.pri').onclick=()=>{const j=J();if(j<0){close();return gone()}const cs=(S.contacts?.data||[]).map(x=>({...x}));w.querySelectorAll('[data-k]').forEach(inp=>cs[j][inp.dataset.k]=inp.value.trim());if(!cs[j].name)return;close();save('contacts',cs);toast('고쳤어요')};
  document.body.appendChild(w)}
 let memoT;function memoSave(){$('memost').textContent='저장 중…';clearTimeout(memoT);memoT=setTimeout(async()=>{await save('memo',{text:$('memo').value});$('memost').textContent='저장됨 '+new Date().toTimeString().slice(0,5)},800)}
-function sendChat(e){e.preventDefault();const v=$('ci').value.trim();if(!v)return;$('ci').value='';if(PROOM){inbox('room',JSON.stringify({cli:PROOM,text:v}));$('chat').insertAdjacentHTML('beforeend',`<div class="msg user">${E(v)}<span class="muted">보냄 · 맥이 그 세션에 전달해요</span></div>`);chatBottom()}else ask(v)}
+function sendChat(e){e.preventDefault();const v=$('ci').value.trim();if(!v)return;$('ci').value='';if(PROOM){inbox('room',JSON.stringify({cli:PROOM,text:v}));sent(PROOM,v)}else ask(v)}
 // ---- 펼친 화면 배치(이 기기 전용): 폭·숨김 ----
 const PL=JSON.parse(localStorage.getItem('playout')||'{}');function savePL(){localStorage.setItem('playout',JSON.stringify(PL))}
 function applyPL(){const hid=PL.hidden||[];document.querySelectorAll('.card[data-id]').forEach(c=>{c.classList.toggle('wide',(PL.wide||[]).includes(c.dataset.id));c.style.display=hid.includes(c.dataset.id)?'none':''});
@@ -437,15 +480,27 @@ function pcSize(id){const w=PL.wide||[];const i=w.indexOf(id);i<0?w.push(id):w.s
 function pcHide(id){PL.hidden=[...(PL.hidden||[]),id];savePL();applyPL();toast('숨겼어요 (맨 아래에서 복구)')}
 function pcShow(id){PL.hidden=(PL.hidden||[]).filter(x=>x!==id);savePL();applyPL()}
 applyPL();
-{const _r=render;render=function(k){if(DRAGGING)return;_r(k);cacheS()}}
+// 새로 그릴 때(맥이 보내 줄 때마다·내가 바꿀 때마다) 쓰던 글·커서·펼친 칸·스크롤 자리를 지킨다
+// 2026-11-01 사용자 점검: 할 일 칸에 쓰던 글이 몇 초마다 지워지고, 펼친 '전체 단계'가 접히며 화면이 튀었음
+const dkey=d=>(d.closest('.proj')?.querySelector('b')?.textContent||d.closest('[id]')?.id||'')+'|'+(d.querySelector('summary')?.textContent||'').replace(/[\d·\s]+/g,'');
+{const _r=render;render=function(k){if(DRAGGING)return;
+ const ae=document.activeElement,keep=[...document.querySelectorAll('#app input[id]:not([type=checkbox]):not([type=date])')].filter(x=>x.value).map(x=>[x.id,x.value]),
+  foc=ae?.id&&ae.closest?.('#app')&&ae.matches('input,textarea')?[ae.id,ae.selectionStart,ae.selectionEnd]:null,open=[...document.querySelectorAll('#app details[open]')].map(dkey),y=scrollY;
+ _r(k);
+ keep.forEach(([id,v])=>{const x=$(id);if(x&&!x.value)x.value=v});
+ const ds=[...document.querySelectorAll('#app details')];open.forEach(o=>{const d=ds.find(d=>dkey(d)===o);if(d)d.open=true});
+ if(foc){const x=$(foc[0]);if(x&&document.activeElement!==x){x.focus({preventScroll:true});try{x.setSelectionRange(foc[1],foc[2])}catch{}}}
+ if(Math.abs(scrollY-y)>2)scrollTo(0,y);cacheS()}}
 // ---- 길게 눌러(0.35초) 끌어서 할 일 순서 바꾸기 (맥과 같음). 글자 위에서도 시작된다 — 짧게 누르면 고치기, 길게 누르면 끌기(2026-10-31: 글자를 빼 두니 잡을 데가 없어 "이동이 안 된다"고 하심) ----
 var DRAGGING=false;
-function sortable(root,itemSel,{group=()=>'',ok=(to,el)=>group(to)===group(el),head,onDrop}){if(!root)return;let t=null,it=null,sx=0,sy=0,lifted=false;const cancel=()=>{clearTimeout(t);t=null};
+function sortable(root,itemSel,{group=()=>'',ok=(to,el)=>group(to)===group(el),head,onDrop}){if(!root)return;let t=null,it=null,sx=0,sy=0,lifted=false,before=[],bh=null;const cancel=()=>{clearTimeout(t);t=null};
+ const hd=el=>{let h=el.previousElementSibling;while(h&&!(head&&h.matches(head)))h=h.previousElementSibling;return h};  // 들기 전 묶음 머리글
  root.addEventListener('pointerdown',e=>{if(e.target.closest('input,button,a,textarea,form,.swa'))return;const el=e.target.closest(itemSel);if(!el||!root.contains(el))return;sx=e.clientX;sy=e.clientY;lifted=false;const pid=e.pointerId;
-  t=setTimeout(()=>{it=el;lifted=true;DRAGGING=true;el.classList.add('lifting');document.body.classList.add('sorting');try{root.setPointerCapture(pid)}catch{}if(navigator.vibrate)navigator.vibrate(15)},350)});
+  t=setTimeout(()=>{it=el;lifted=true;DRAGGING=true;before=[...root.querySelectorAll(itemSel)];bh=hd(el);el.classList.add('lifting');document.body.classList.add('sorting');try{root.setPointerCapture(pid)}catch{}if(navigator.vibrate)navigator.vibrate(15)},350)});
  root.addEventListener('pointermove',e=>{if(!it){if(t&&Math.hypot(e.clientX-sx,e.clientY-sy)>8)cancel();return}e.preventDefault();const tg=document.elementFromPoint(e.clientX,e.clientY),h=head&&tg?.closest(head);if(h&&root.contains(h)&&ok(h,it))return h.after(it);const o=tg?.closest(itemSel);
   if(!o||o===it||!root.contains(o)||!ok(o,it))return;const r=o.getBoundingClientRect();e.clientY<r.top+r.height/2?o.before(it):o.after(it)});
- const end=()=>{cancel();if(!it)return;const el=it;it=null;DRAGGING=false;el.classList.remove('lifting');document.body.classList.remove('sorting');onDrop(el);setTimeout(()=>{lifted=false},80)};
+ const end=()=>{cancel();if(!it)return;const el=it;it=null;DRAGGING=false;el.classList.remove('lifting');document.body.classList.remove('sorting');
+  const after=[...root.querySelectorAll(itemSel)];if(after.some((x,j)=>x!==before[j])||hd(el)!==bh)onDrop(el);setTimeout(()=>{lifted=false},80)};  // 꾹 눌렀다 그냥 놓으면 아무것도 안 바꾼다
  root.addEventListener('pointerup',end);root.addEventListener('pointercancel',end);
  root.addEventListener('click',e=>{if(lifted){e.preventDefault();e.stopPropagation();lifted=false}},true);
  root.addEventListener('touchmove',e=>{if(it)e.preventDefault()},{passive:false});root.addEventListener('contextmenu',e=>{if(it||t)e.preventDefault()})}
@@ -454,24 +509,23 @@ sortable($('todo'),'li[data-i]',{onDrop:()=>todoOrder([...document.querySelector
 // 오늘 할 것: 다른 묶음(꼭 오늘·여유 있을 때)으로 옮기면 마감을 거기에 맞춘다 — 맥 todo_regroup과 같은 규칙
 function regroup(t,g){const d=today();if(g==='꼭 오늘'||g==='여유 있을 때')['by','src','src_cli'].forEach(k=>delete t[k]);if(g==='꼭 오늘'){t.due=d;delete t.later}else if(g==='여유 있을 때'){const n=new Date(Date.now()+864e5-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);if((t.due||'9')<=n)t.due=null;t.prio=Math.min(t.prio||0,2);t.later=true}}
 const HDROP=['꼭 오늘','여유 있을 때'];
-sortable($('hlist'),'.hit[data-todo]',{group:el=>el.dataset.g,ok:(to,el)=>to.dataset.g===el.dataset.g||HDROP.includes(to.dataset.g),head:'.hgrp[data-g]',onDrop:el=>{let h=el.previousElementSibling;while(h&&!h.classList.contains('hgrp'))h=h.previousElementSibling;const g=h?.dataset.g,mv=g&&g!==el.dataset.g?[+el.dataset.todo,g]:null;
- todoOrder([...document.querySelectorAll('#hlist .hit[data-todo]')].map(x=>+x.dataset.todo),mv);if(mv){el.dataset.g=g;toast(`'${g}'(으)로 옮겼어요`)}}});  // 그릴 때마다 폰에 저장
+sortable($('hlist'),'.hit[data-todo]:not(.hdone)',{group:el=>el.dataset.g,ok:(to,el)=>to.dataset.g===el.dataset.g||HDROP.includes(to.dataset.g),head:'.hgrp[data-g]',onDrop:el=>{let h=el.previousElementSibling;while(h&&!h.classList.contains('hgrp'))h=h.previousElementSibling;const g=h?.dataset.g,mv=g&&g!==el.dataset.g?[+el.dataset.todo,g]:null;
+ hFix();todoOrder([...document.querySelectorAll('#hlist .hit[data-todo]:not(.hdone)')].map(x=>+x.dataset.todo),mv);if(mv){el.dataset.g=g;toast(`'${g}'(으)로 옮겼어요`)}}});  // 그릴 때마다 폰에 저장
 // ---- 옆으로 밀면 고치기·고정·삭제 버튼 (왼쪽으로 밀면 오른쪽에, 오른쪽으로 밀면 왼쪽에). 세로로 움직이면 그냥 스크롤 ----
-function swipable(root,itemSel,idx,acts=i=>`<button onclick="todoSheet(${i})">✎<span>고치기</span></button><button class="p" onclick="pinTodo(${i})">📌<span>고정</span></button><button class="d" onclick="delTodo(${i})">🗑<span>삭제</span></button>`){if(!root)return;let el=null,sx=0,sy=0,dx=0,axis=null,W=168;
+function swipable(root,itemSel,acts=el=>[['✎<span>고치기</span>','',()=>todoSheet(...rk(el))],['📌<span>고정</span>','p',()=>pinTodo(...rk(el))],['🗑<span>삭제</span>','d',()=>delTodo(...rk(el))]]){if(!root)return;let el=null,sx=0,sy=0,dx=0,axis=null,W=168;
  const shut=r=>{r.classList.remove('sw','swr');r.style.transform='';r.querySelector('.swa')?.remove()};
  document.addEventListener('pointerdown',e=>{root.querySelectorAll('.sw').forEach(r=>{if(!r.contains(e.target))shut(r)})});
  root.addEventListener('pointerdown',e=>{axis=null;el=null;if(e.target.closest('input,button,a,form,.swa'))return;el=e.target.closest(itemSel);if(!el||!root.contains(el))return;sx=e.clientX;sy=e.clientY;dx=0});
  root.addEventListener('pointermove',e=>{if(!el||DRAGGING)return;const mx=e.clientX-sx,my=e.clientY-sy;if(!axis){if(Math.abs(mx)<10&&Math.abs(my)<10)return;axis=Math.abs(mx)>Math.abs(my)?'x':'y'}if(axis!=='x')return;
-  dx=Math.max(-W,Math.min(W,mx));if(!el.querySelector('.swa')){const i=idx(el),r=el,a=document.createElement('span');a.className='swa';a.innerHTML=acts(i);W=a.children.length*56;a.addEventListener('click',()=>shut(r));el.append(a)}
+  dx=Math.max(-W,Math.min(W,mx));if(!el.querySelector('.swa')){const r=el,a=document.createElement('span');a.className='swa';for(const [h,c,fn] of acts(r)){const b=document.createElement('button');b.className=c;b.innerHTML=h;b.onclick=ev=>{ev.stopPropagation();shut(r);fn()};a.append(b)}W=a.children.length*56;el.append(a)}
   el.classList.add('swing');el.classList.toggle('swr',dx>0);el.style.transform=`translateX(${dx}px)`});
  const end=()=>{if(!el)return;const r=el;el=null;r.classList.remove('swing');if(axis!=='x')return;if(Math.abs(dx)>W/3){r.classList.add('sw');r.style.transform=`translateX(${dx>0?W:-W}px)`}else shut(r)};
  root.addEventListener('pointerup',end);root.addEventListener('pointercancel',end);
  root.addEventListener('click',e=>{if(axis==='x'&&!e.target.closest('.swa')){e.stopPropagation();e.preventDefault();axis=null}},true)}  // 민 직후의 탭은 고치기 창을 열지 않게
-swipable($('hlist'),'.hit[data-todo]',el=>+el.dataset.todo);swipable($('todo'),'li[data-i]',el=>+el.dataset.i);
+swipable($('hlist'),'.hit[data-todo]:not(.hdone)');swipable($('todo'),'li[data-i]');
 // 현황표 단계: 옆으로 밀면 이름/삭제, 길게 눌러 끌면 같은 일 안에서 순서 바꾸기 (전체 단계 목록·남은 단계 목록 둘 다)
-const stepIdx=el=>`${+el.closest('.proj').dataset.p},${+el.dataset.k}`;
-swipable($('projects'),'.steps li[data-k]',stepIdx,i=>`<button onclick="stepSheet(${i})">✎<span>이름</span></button><button class="d" onclick="stepDel(${i})">🗑<span>삭제</span></button>`);
-function stepDel(i,k){const prev=S.projects?.data||[],ps=PS();ps[i].steps.splice(k,1);pstamp(ps[i]);save('projects',ps);toast('단계를 지웠어요',()=>save('projects',prev))}
+swipable($('projects'),'.steps li[data-k]',el=>{const i=+el.closest('.proj').dataset.p,k=+el.dataset.k;return [['✎<span>이름</span>','',()=>stepSheet(i,k)],['🗑<span>삭제</span>','d',()=>stepDel(i,k)]]});
+function stepDel(i,k){const ps=PS(),pk=ps[i].title,[it]=ps[i].steps.splice(k,1);pstamp(ps[i]);save('projects',ps);toast('단계를 지웠어요',()=>{const c=PS(),a=PJ(i,pk);if(a<0)return;c[a].steps.splice(Math.min(k,c[a].steps.length),0,it);save('projects',c)})}
 sortable($('projects'),'.steps li[data-k]',{group:el=>el.closest('.steps'),onDrop:el=>{const i=+el.closest('.proj').dataset.p,ol=el.closest('.steps'),ks=[...ol.querySelectorAll('li[data-k]')].map(l=>+l.dataset.k);stepOrder(i,ks)}});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script></html>
