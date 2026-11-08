@@ -218,6 +218,7 @@ button.sm,form.inline button.sm{background:var(--gold);color:#fff;border-radius:
  <section class="tab" id="t-chat"><div class="card" data-id="chat"><div class="rchips" id="rchips"></div><h2><span id="rtitle">비서</span> <span id="pend" class="live" hidden>● 처리 중</span><span id="rstate" class="rst"></span><span class="cc"><button onclick="pcSize('chat')">⇔</button><button onclick="pcHide('chat')">×</button></span></h2><div class="chat snap" id="chat"></div>
   <form class="inline" onsubmit="sendChat(event)"><input id="ci" placeholder="비서에게 말하기"><button class="sm">보내기</button></form>
   <div class="quick"><button onclick="inbox('check','')">↻ 다시 브리핑</button><button onclick="ask('회사 메일 확인하고, 업무 회신이 있으면 답장 초안까지 써줘')">📬 메일 확인</button><button onclick="ask('코워크 협업함 SNS로/ 의 새 메시지를 규칙.md대로 처리해줘')">🤝 코워크 메시지 처리</button><button onclick="ask('오늘 할 일 우선순위 정리해서 무엇부터 할지 알려줘')">☀ 오늘 순서</button><button onclick="ask('온라인 클래스 이번 주 출석 상황 정리해줘. 결석·미기록 있으면 알려줘')">🎓 출석 점검</button></div></div></section>
+ <section class="tab" id="t-me"><div class="card" id="ptodo"></div></section>
  <section class="tab" id="t-more">
   <h4 class="msec">오늘 브리핑</h4>
   <div class="card snap" data-id="brief"><h2>브리핑 자세히<span class="cc"><button onclick="pcSize('brief')">⇔</button><button onclick="pcHide('brief')">×</button></span></h2><div id="brief"></div></div>
@@ -238,10 +239,11 @@ button.sm,form.inline button.sm{background:var(--gold);color:#fff;border-radius:
  </section>
 </div>
 <div id="hidebar" class="muted" style="padding:0 12px"></div></main>
-<nav id="nav"><button class="on" data-t="today" onclick="tab('today')"><span>☀</span>오늘<i id="nb-today"></i></button><button data-t="proj" onclick="tab('proj')"><span>▦</span>현황표</button><button data-t="chat" onclick="tab('chat')"><span>💬</span>비서<i id="nb-chat"></i></button><button data-t="more" onclick="tab('more')"><span>⋯</span>더보기</button></nav>
+<nav id="nav"><button class="on" data-t="today" onclick="tab('today')"><span>☀</span>오늘<i id="nb-today"></i></button><button data-t="proj" onclick="tab('proj')"><span>▦</span>현황표</button><button data-t="chat" onclick="tab('chat')"><span>💬</span>비서<i id="nb-chat"></i></button><button data-t="me" onclick="tab('me')"><span>♡</span>개인<i id="nb-me"></i></button><button data-t="more" onclick="tab('more')"><span>⋯</span>더보기</button></nav>
 <div class="toast" id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
+<script src="ptodo.js"></script>
 <script>
 const $=id=>document.getElementById(id);const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const LS={get:k=>{try{return JSON.parse(localStorage.getItem(k)||'null')}catch{return null}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
@@ -368,8 +370,8 @@ if(location.hash==='#test'){fetch('_test.json').then(r=>r.json()).then(rows=>{fo
 // 2026-11-01: 매번 tab()을 불러 보던 자리에서 맨 위로 튀었음
 let BOOTED=false;
 async function boot(){let data,error;try{({data,error}=await db.from('dash_state').select('key,data,updated_at,src').eq('user_id',UID))}catch(e){error=e}if(error){netBadge();if(navigator.onLine)toast('불러오기 실패 — 저장해 둔 화면을 보여 드려요');return}
- const y=scrollY;for(const r of data)S[r.key]=r;render();flush();if(BOOTED){scrollTo(0,y);return}BOOTED=true;tab(localStorage.getItem('tab')||'today');
- db.channel('dash').on('postgres_changes',{event:'*',schema:'public',table:'dash_state',filter:'user_id=eq.'+UID},p=>{const r=p.new;if(!r||!r.key)return;if(S[r.key]&&r.src==='phone'&&S[r.key].updated_at>=r.updated_at)return;S[r.key]=r;render(r.key)}).subscribe(st=>{if(st!=='SUBSCRIBED'){$('conn').className='warn';$('conn').textContent='연결 중…'}else staleness()});
+ const y=scrollY;for(const r of data){if(r.key==='ptodo'&&S.ptodo)r.data=PT.merge(S.ptodo.data,r.data);S[r.key]=r}render();flush();if(BOOTED){scrollTo(0,y);return}BOOTED=true;tab(localStorage.getItem('tab')||'today');
+ db.channel('dash').on('postgres_changes',{event:'*',schema:'public',table:'dash_state',filter:'user_id=eq.'+UID},p=>{const r=p.new;if(!r||!r.key)return;if(S[r.key]&&r.src==='phone'&&S[r.key].updated_at>=r.updated_at)return;if(r.key==='ptodo'&&S.ptodo)r.data=PT.merge(S.ptodo.data,r.data);S[r.key]=r;render(r.key)}).subscribe(st=>{if(st!=='SUBSCRIBED'){$('conn').className='warn';$('conn').textContent='연결 중…'}else staleness()});
  setInterval(staleness,30000)}
 async function save(key,data){const row={user_id:UID,key,data,src:'phone',updated_at:new Date().toISOString()};S[key]={...row};render(key);let error;try{({error}=await db.from('dash_state').upsert(row))}catch(e){error=e}if(error){queue('row',row);toast('오프라인 — 저장해 뒀다가 연결되면 맥에 보내요',null,1)}}
 async function inbox(kind,payload){const x={user_id:UID,kind,payload};let error;try{({error}=await db.from('dash_inbox').insert(x))}catch(e){error=e}if(error){queue('inbox',x);toast('오프라인 — 연결되면 보낼게요',null,1)}else toast('보냈어요 — 맥이 켜져 있으면 곧 반영돼요',null,1)}
@@ -392,7 +394,7 @@ function staleness(){if(!navigator.onLine)return netBadge();const s=S.snapshot?.
 // ---- 렌더 ----
 function render(k){const s=S.snapshot?.data||{};if(!k||k==='snapshot'){$('head').innerHTML=s.head||'';$('hmailn').textContent=s.mailn||'';document.querySelector('.hmail').classList.toggle('on',!!s.mailn);for(const id of ['brief','mail','collab','oc','stats','act','sessions'])$(id).innerHTML=s[id]||'<p class=muted>맥에서 올린 내용 없음</p>';$('care').innerHTML=s.care||'';careBtns();for(const id of ['hai','htl','hflow','hweek'])$(id).innerHTML=s[id]||'';chanBtns();renderHList(s);renderRooms();$('pend').hidden=!s.pending;$('nb-chat').textContent=s.pending?'…':'';briefDots();staleness()}
  if(!k||k==='todo'){renderTodo();if(k)hFix()}if(!k||k==='projects')renderProj();if(!k||k==='todo'||k==='projects')renderDday();
- if((!k||k==='memo')&&document.activeElement!==$('memo'))$('memo').value=S.memo?.data?.text||'';if(!k||k==='contacts')renderContacts();if(!k||k==='accounts')renderAcc();if(!k||k==='push_pub')renderPush()}
+ if((!k||k==='memo')&&document.activeElement!==$('memo'))$('memo').value=S.memo?.data?.text||'';if(!k||k==='contacts')renderContacts();if(!k||k==='accounts')renderAcc();if(!k||k==='push_pub')renderPush();if(!k||k==='ptodo'){window.PTUI?.render();$('nb-me').textContent=PT.openCount(S.ptodo?.data)||''}}
 // 계정: 맥 업무판과 같은 항목(묶음 SNS/업무·서비스·아이디·주소·메모). 비밀번호는 안 둔다. 서비스 이름 누르면 고치기 창
 const AG=()=>[...new Set(['SNS','업무',...(S.accounts?.data||[]).map(a=>a.group||'업무')])];  // 개인 등 다른 묶음도 빠짐없이
 function renderAcc(){const as=S.accounts?.data||[];let h='';for(const g of AG()){const rows=as.map((a,i)=>[a,i]).filter(([a])=>(a.group||'업무')===g);if(!rows.length)continue;
@@ -557,6 +559,8 @@ function swipable(root,itemSel,acts=el=>[['✎<span>고치기</span>','',()=>tod
  root.addEventListener('pointerup',end);root.addEventListener('pointercancel',end);
  root.addEventListener('click',e=>{if(axis==='x'&&!e.target.closest('.swa')){e.stopPropagation();e.preventDefault();axis=null}},true)}  // 민 직후의 탭은 고치기 창을 열지 않게
 swipable($('hlist'),'.hit[data-todo]:not(.hdone)');swipable($('hlist'),'.hit[data-k]',alertActs);swipable($('hlist'),'.hit[data-s]',h=>[['🗑<span>삭제</span>','d',()=>listHideEl(h)]]);swipable($('hlist'),'.hit.hdone[data-todo]',el=>[['🗑<span>삭제</span>','d',()=>delTodo(...rk(el))]]);  // 체크한 것도 밀어서 지우기swipable($('todo'),'li[data-i]');
+// 개인 To Do(업무와 따로, 2026-11-09): 맥 /personal 과 같은 ptodo.js
+window.PTUI=PT.mount($('ptodo'),{get:()=>S.ptodo?.data||[],set:l=>save('ptodo',l),toast:(m,fn)=>{$('toast')._u=null;toast(m,fn)}});swipable($('ptodo'),'.pt-open .pt-row,.pt-dl .pt-row',PTUI.acts);
 // 현황표 단계: 옆으로 밀면 이름/삭제, 길게 눌러 끌면 같은 일 안에서 순서 바꾸기 (전체 단계 목록·남은 단계 목록 둘 다)
 swipable($('projects'),'.steps li[data-k]',el=>{const i=+el.closest('.proj').dataset.p,k=+el.dataset.k;return [['✎<span>이름</span>','',()=>stepSheet(i,k)],['🗑<span>삭제</span>','d',()=>stepDel(i,k)]]});
 function stepDel(i,k){const ps=PS(),pk=ps[i].title,[it]=ps[i].steps.splice(k,1);pstamp(ps[i]);save('projects',ps);toast('단계를 지웠어요',()=>{const c=PS(),a=PJ(i,pk);if(a<0)return;c[a].steps.splice(Math.min(k,c[a].steps.length),0,it);save('projects',c)})}
