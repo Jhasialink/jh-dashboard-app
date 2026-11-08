@@ -195,6 +195,7 @@ nav button i:empty{display:none}
 .care{background:var(--goldbg);border:0}.card h2{font-weight:550}.bhead{font-weight:500}.tile b{font-weight:500}
 button.sm,form.inline button.sm{background:var(--gold);color:#fff;border-radius:40px}button.ghost{background:none;color:var(--ink2)}.quick button{border-radius:40px}
 @keyframes pgin{from{opacity:.25;transform:translateY(6px)}to{opacity:1;transform:none}}.pgin{animation:pgin .22s ease-out}@media (prefers-reduced-motion:reduce){.pgin{animation:none}}
+#tdback{position:fixed;left:12px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:30;border:0;border-radius:22px;padding:11px 18px;background:var(--gold);color:#fff;font:inherit;font-size:14px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.18)}#tdback[hidden]{display:none}
 </style>
 <header id="hdr"><div class="htop"><h1>JH 업무 대시보드</h1><button class="hmail" onclick="goCard('mailc')" title="회사 메일 보기">✉ 메일<b id="hmailn"></b></button><span id="conn">연결 중</span></div><span id="head"></span></header>
 <div id="stale" class="stale" hidden></div>
@@ -251,7 +252,7 @@ function toast(t,undo,soft){const e=$('toast'),up=e.style.display==='block'&&e._
  e.textContent=t;if(undo){const b=document.createElement('button');b.textContent='되돌리기';b.onclick=()=>{e.style.display='none';e._u=null;undo();toast('되돌렸어요')};e.append(b)}e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>{e.style.display='none';e._u=null},undo?6000:2500)}
 // 탭마다 보던 자리를 기억: 다른 탭 갔다 오면 그 자리로(2026-11-01 점검: 탭 바꿀 때마다 맨 위로 갔음). 지금 탭을 다시 누르면 그대로
 const TABY={};let CURTAB='';
-function tab(t,fromPop){if(t===CURTAB){hh();return}if(CURTAB)TABY[CURTAB]=scrollY;
+function tab(t,fromPop){if(t===CURTAB){hh();return}if($('tdback'))$('tdback').hidden=true;if(CURTAB)TABY[CURTAB]=scrollY;
  try{if(!fromPop)(CURTAB?history.pushState:history.replaceState).call(history,{t},'')}catch{}  // 뒤로가기 = 이전 탭(앱 꺼짐 방지)
  CURTAB=t;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.id==='t-'+t));{const sec=$('t-'+t);if(sec&&!matchMedia('(prefers-reduced-motion: reduce)').matches){sec.classList.remove('pgin');void sec.offsetWidth;sec.classList.add('pgin')}}  // 탭 바뀔 때 살짝 나타나기
  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));localStorage.setItem('tab',t);window.scrollTo(0,TABY[t]||0);hh();if(t==='chat')chatBottom()}
@@ -307,6 +308,7 @@ function alertSheet(h){const f=h.dataset.f,acts=f?[['✎ 초안 보기·고치�
  w.innerHTML=`<div><b>${E(h.dataset.t)}</b><div class="grp col">${acts.map(([l],k)=>`<button data-k="${k}">${l}</button>`).join('')}</div><div class="tr"><button class="no">닫기</button></div></div>`;
  const close=()=>w.remove();w.onclick=e=>{if(e.target===w)close()};w.querySelector('.no').onclick=close;w.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{close();acts[+b.dataset.k][1]()});document.body.appendChild(w)}
 function hPull(h){const p=h.parentNode,n=h.nextSibling;h.remove();hBadge(-1);return ()=>{if(p&&document.contains(p)){p.insertBefore(h,n?.parentNode===p?n:null);hBadge(1)}}}  // 줄을 빼고, 되돌리기용 함수를 돌려준다
+function listHideEl(h){const t=h.dataset.t,back=hPull(h);inbox('home',JSON.stringify({op:'list_hide',text:t}));toast('To Do List에서 뺐어요',()=>{back();inbox('home',JSON.stringify({op:'list_unhide',text:t}))})}  // 비서 추천 줄(현황표·비서 점검) 빼기
 function alertHide(h){const t=h.dataset.t,back=hPull(h);inbox('home',JSON.stringify({op:'home_hide',text:t}));toast('오늘은 안 보이게 했어요',()=>{back();inbox('home',JSON.stringify({op:'home_unhide',text:t}))})}
 function alertTodo(h){const t=h.dataset.t,clean=t.replace(/^(마감 지남|오늘 아직 안 함|급함|오늘 마감) · /,''),back=hPull(h);inbox('home',JSON.stringify({op:'home_hide',text:t}));
  const items=(S.todo?.data||[]).map(x=>({...x}));let j=items.findIndex(x=>x.text===clean&&!x.done);if(j<0){items.push({text:clean,daily:false,done:null,prio:0,due:today()});j=items.length-1;save('todo',items);hAdd(j)}
@@ -327,7 +329,8 @@ function hAdd(j){const L=$('hlist'),t=S.todo?.data?.[j];if(!L.firstChild||!t)ret
 const QCH=src=>`<div class="qchips"><span class="muted">적고 바로:</span><button type="button" onclick="addQuick('오늘','${src}')">꼭 오늘</button><button type="button" onclick="addQuick('내일','${src}')">내일</button><button type="button" onclick="addQuick('여유','${src}')">여유 있을 때</button></div>`;
 function addQuick(w,src){const inp=$(src),v=inp.value.trim();if(!v){inp.focus();return toast('먼저 할 일을 적어 주세요')}inp.value='';$('ti').value=v+(w==='여유'?'':' @'+w);addTodo({preventDefault(){}},w==='여유');toast(w==='여유'?"'여유 있을 때'에 넣었어요":`'${w}' 마감으로 넣었어요`)}
 function hMore(on){on=on??!document.documentElement.classList.contains('hmore-on');document.documentElement.classList.toggle('hmore-on',on);try{localStorage.setItem('hmore',on?'1':'')}catch{}}try{if(localStorage.getItem('hmore'))document.documentElement.classList.add('hmore-on')}catch{}
-function goCard(id){const m={mailc:'mail',occ:'oc',collab:'collab',proj:'proj',todo:'todo'};const cid=m[id]||id;tab(cid==='proj'?'proj':cid==='todo'?'today':'more');const c=document.querySelector(`.card[data-id="${cid}"]`);if(c){c.classList.remove('fold');setTimeout(()=>c.scrollIntoView({behavior:'smooth',block:'start'}),60)}}
+function goCard(id){const from=CURTAB;goCard0(id);if(from==='today'&&CURTAB!=='today'){let b=$('tdback');if(!b){b=document.createElement('button');b.id='tdback';b.textContent='‹ To Do List';b.onclick=()=>history.back();document.body.append(b)}b.hidden=false}}  // 넘어간 화면에서 To Do List로 돌아가는 버튼(2026-11-09)
+function goCard0(id){const m={mailc:'mail',occ:'oc',collab:'collab',proj:'proj',todo:'todo'};const cid=m[id]||id;tab(cid==='proj'?'proj':cid==='todo'?'today':'more');const c=document.querySelector(`.card[data-id="${cid}"]`);if(c){c.classList.remove('fold');setTimeout(()=>c.scrollIntoView({behavior:'smooth',block:'start'}),60)}}
 // 비서 탭의 대화방: 비서 + 맥에서 고른 코드 세션(맥이 1분마다·바뀔 때 올림)
 let PROOM=localStorage.getItem('proom')||'';
 function renderRooms(){const s=S.snapshot?.data||{};const rs=s.rooms||[];if(PROOM&&rs.length&&!rs.some(r=>r.cli===PROOM)){PROOM='';localStorage.setItem('proom','');toast('보던 세션이 맥 목록에서 빠져서 비서 대화로 돌아왔어요')}
@@ -553,7 +556,7 @@ function swipable(root,itemSel,acts=el=>[['✎<span>고치기</span>','',()=>tod
  const end=()=>{if(!el)return;const r=el;el=null;r.classList.remove('swing');if(axis!=='x')return;if(Math.abs(dx)>W/3){r.classList.add('sw');r.style.transform=`translateX(${dx>0?W:-W}px)`}else shut(r)};
  root.addEventListener('pointerup',end);root.addEventListener('pointercancel',end);
  root.addEventListener('click',e=>{if(axis==='x'&&!e.target.closest('.swa')){e.stopPropagation();e.preventDefault();axis=null}},true)}  // 민 직후의 탭은 고치기 창을 열지 않게
-swipable($('hlist'),'.hit[data-todo]:not(.hdone)');swipable($('hlist'),'.hit[data-k]',alertActs);swipable($('hlist'),'.hit.hdone[data-todo]',el=>[['🗑<span>삭제</span>','d',()=>delTodo(...rk(el))]]);  // 체크한 것도 밀어서 지우기swipable($('todo'),'li[data-i]');
+swipable($('hlist'),'.hit[data-todo]:not(.hdone)');swipable($('hlist'),'.hit[data-k]',alertActs);swipable($('hlist'),'.hit[data-s]',h=>[['🗑<span>삭제</span>','d',()=>listHideEl(h)]]);swipable($('hlist'),'.hit.hdone[data-todo]',el=>[['🗑<span>삭제</span>','d',()=>delTodo(...rk(el))]]);  // 체크한 것도 밀어서 지우기swipable($('todo'),'li[data-i]');
 // 현황표 단계: 옆으로 밀면 이름/삭제, 길게 눌러 끌면 같은 일 안에서 순서 바꾸기 (전체 단계 목록·남은 단계 목록 둘 다)
 swipable($('projects'),'.steps li[data-k]',el=>{const i=+el.closest('.proj').dataset.p,k=+el.dataset.k;return [['✎<span>이름</span>','',()=>stepSheet(i,k)],['🗑<span>삭제</span>','d',()=>stepDel(i,k)]]});
 function stepDel(i,k){const ps=PS(),pk=ps[i].title,[it]=ps[i].steps.splice(k,1);pstamp(ps[i]);save('projects',ps);toast('단계를 지웠어요',()=>{const c=PS(),a=PJ(i,pk);if(a<0)return;c[a].steps.splice(Math.min(k,c[a].steps.length),0,it);save('projects',c)})}
