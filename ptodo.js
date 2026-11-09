@@ -46,7 +46,8 @@
 .pt .pt-ck{flex:0 0 44px;height:44px;display:flex;align-items:center;justify-content:center}
 .pt .pt-ck input{width:22px;height:22px;margin:0;accent-color:var(--pt-gold);cursor:pointer}
 .pt .pt-t{flex:1;min-width:0;padding:10px 0;line-height:1.4;word-break:keep-all;overflow-wrap:anywhere;cursor:text}
-.pt .pt-t input{width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:6px 8px;border:1px solid var(--pt-gold);border-radius:8px;background:var(--pt-card);color:var(--pt-ink)}
+.pt .pt-t textarea{display:block;width:100%;box-sizing:border-box;font:inherit;font-size:16px;line-height:1.4;padding:8px 10px;border:1px solid var(--pt-gold);border-radius:8px;background:var(--pt-card);color:var(--pt-ink);resize:none;overflow:hidden;word-break:keep-all;overflow-wrap:anywhere}
+.pt .pt-editing .pt-acts,.pt .pt-editing .pt-d,.pt .pt-editing .pt-h{display:none}
 .pt .pt-d{font-size:12px;color:var(--pt-mute);white-space:nowrap;padding:2px 8px;border-radius:20px;background:var(--pt-soft)}
 .pt .pt-d.r{color:var(--pt-red);background:color-mix(in srgb,var(--pt-red) 10%,transparent)}.pt .pt-d.a{color:var(--pt-gold)}
 .pt .pt-acts{display:flex;gap:2px;opacity:.35;transition:opacity .15s}.pt .pt-row:hover .pt-acts,.pt .pt-acts:focus-within{opacity:1}
@@ -146,8 +147,10 @@
 
     function edit(id) {
       const r = root.querySelector(`.pt-row[data-id="${CSS.escape(id)}"] .pt-t`), x = live(io.get()).find(y => y.id === id); if (!r || !x) return;
-      editing = id; r.innerHTML = `<input maxlength="${MAX}" value="${esc(x.text)}" aria-label="할 일 고치기">`;
-      const e = r.querySelector('input'); e.focus(); e.setSelectionRange(e.value.length, e.value.length);
+      editing = id; r.closest('.pt-row').classList.add('pt-editing');  // 고치는 동안 버튼·마감 숨기고 글 칸을 줄 전체로
+      r.innerHTML = `<textarea rows="1" maxlength="${MAX}" aria-label="할 일 고치기">${esc(x.text)}</textarea>`;
+      const e = r.querySelector('textarea'), fit = () => { e.style.height = 'auto'; e.style.height = e.scrollHeight + 2 + 'px'; };
+      e.addEventListener('input', fit); fit(); e.focus(); e.setSelectionRange(e.value.length, e.value.length);
       let done = false;
       const finish = save => { if (done) return; done = true; editing = null; const v = e.value.replace(/\s+/g, ' ').trim();
         if (save && v && v !== x.text) { const prev = list(); touch(id, y => y.text = v); undoable('고쳤어요', prev); } else { if (save && !v) toast('빈 이름은 안 돼요 — 지우려면 ×를 눌러 주세요'); render(); } };
@@ -177,7 +180,7 @@
         for (const x of l) if (ids.includes(x.id)) { if (b === 'done') x.done = today(); if (b === 'pin') x.pin = true; x.u = now; }
         root._sel = false; sel.clear(); commit(l); return undoable(b === 'done' ? `${ids.length}개를 완료했어요` : `${ids.length}개를 고정했어요`, prev); }
       if (root._sel && r && !e.target.closest('.pt-sel')) { sel.has(id) ? sel.delete(id) : sel.add(id); return render(); }
-      if (e.target.closest('.pt-t') && r && !e.target.closest('input') && !root._sel) return edit(id);
+      if (e.target.closest('.pt-t') && r && !e.target.closest('input,textarea') && !root._sel) return edit(id);
     });
     root.addEventListener('change', e => {
       const r = e.target.closest('.pt-row'); if (!r) return;

@@ -1,6 +1,6 @@
 // 폰 앱 오프라인: 화면 파일은 폰에 저장해 두고(인터넷 있으면 새것으로 갈아 끼움), 없으면 저장본으로 연다.
 // 데이터(Supabase)는 여기서 손대지 않는다 — 앱이 마지막 화면을 따로 저장한다.
-const CACHE = 'jh-app-v6';
+const CACHE = 'jh-app-v7';
 // 폰 알림(웹 푸시): 맥 업무판이 보낸 것을 띄우고, 누르면 앱을 연다
 self.addEventListener('push', e => {
   let d = {}; try { d = e.data.json(); } catch { d = { body: e.data?.text() }; }

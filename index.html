@@ -551,7 +551,7 @@ sortable($('hlist'),'.hit[data-todo]:not(.hdone)',{group:el=>el.dataset.g,ok:(to
 function swipable(root,itemSel,acts=el=>[['✎<span>고치기</span>','',()=>todoSheet(...rk(el))],['📌<span>고정</span>','p',()=>pinTodo(...rk(el))],['🗑<span>삭제</span>','d',()=>delTodo(...rk(el))]]){if(!root)return;let el=null,sx=0,sy=0,dx=0,axis=null,W=168;
  const shut=r=>{r.classList.remove('sw','swr');r.style.transform='';r.querySelector('.swa')?.remove()};
  document.addEventListener('pointerdown',e=>{root.querySelectorAll('.sw').forEach(r=>{if(!r.contains(e.target))shut(r)})});
- root.addEventListener('pointerdown',e=>{axis=null;el=null;if(e.target.closest('input,button,a,form,.swa'))return;el=e.target.closest(itemSel);if(!el||!root.contains(el))return;sx=e.clientX;sy=e.clientY;dx=0});
+ root.addEventListener('pointerdown',e=>{axis=null;el=null;if(e.target.closest('input,button,a,textarea,form,.swa'))return;el=e.target.closest(itemSel);if(!el||!root.contains(el))return;sx=e.clientX;sy=e.clientY;dx=0});
  root.addEventListener('pointermove',e=>{if(!el||DRAGGING)return;const mx=e.clientX-sx,my=e.clientY-sy;if(!axis){if(Math.abs(mx)<10&&Math.abs(my)<10)return;axis=Math.abs(mx)>Math.abs(my)?'x':'y'}if(axis!=='x')return;
   dx=Math.max(-W,Math.min(W,mx));if(!el.querySelector('.swa')){const r=el,a=document.createElement('span');a.className='swa';for(const [h,c,fn] of acts(r)){const b=document.createElement('button');b.className=c;b.innerHTML=h;b.onclick=ev=>{ev.stopPropagation();shut(r);fn()};a.append(b)}W=a.children.length*56;el.append(a)}
   el.classList.add('swing');el.classList.toggle('swr',dx>0);el.style.transform=`translateX(${dx}px)`});
